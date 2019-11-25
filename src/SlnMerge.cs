@@ -1,4 +1,4 @@
-﻿// Copyright © Cysharp, Inc. All rights reserved.
+// Copyright © Cysharp, Inc. All rights reserved.
 // This source code is licensed under the MIT License. See details at https://github.com/Cysharp/SlnMerge.
 
 // ReSharper disable All
@@ -19,6 +19,8 @@ namespace SlnMerge.Unity
     public class SolutionFileProcessor : AssetPostprocessor
     {
         private static readonly bool _hasVsForUnity;
+        private static FileSystemWatcher _watcher;
+        private static string _solutionFilePath;
 
         static SolutionFileProcessor()
         {
@@ -43,6 +45,10 @@ namespace SlnMerge.Unity
                     fieldSolutionFileGeneration.SetValue(null, Delegate.Combine(fieldSolutionFileGenerationDelegate, d));
                 }
             }
+
+            var projectDir = Directory.GetParent(Application.dataPath).FullName;
+            _solutionFilePath = Path.Combine(projectDir, Path.GetFileName(projectDir) + ".sln");
+            WatchOverlaySolutionChanging();
         }
 
         private static bool IsUnityVsIntegrationEnabled
@@ -60,7 +66,8 @@ namespace SlnMerge.Unity
                 return (bool)methodShouldUnityVSBeActive.Invoke(null, new object[0]);
             }
         }
-
+        
+        // UnityEditor Callback
         private static string OnGeneratedSlnSolution(string path, string content)
         {
             return IsUnityVsIntegrationEnabled
@@ -70,12 +77,116 @@ namespace SlnMerge.Unity
 
         private static string Merge(string path, string content)
         {
-            if (SlnMerge.TryMerge(path, content, SlnMergeUnityLogger.Instance, out var solutionContent))
+            if (SlnMerge.TryMerge(path, content, SlnMergeUnityLogger.Instance, out var result))
             {
-                return solutionContent;
+                WatchOverlaySolutionChanging();
+                return result.Merged.ToFileContent();
             }
 
             return content;
+        }
+
+        private static void InvokeSyncOnce()
+        {
+            InvokeSyncForUnityEditor();
+            EditorApplication.update -= InvokeSyncOnce;
+        }
+
+        private static void InvokeSync()
+        {
+            EditorApplication.update += InvokeSyncOnce;
+        }
+
+        private static void InvokeSyncForUnityEditor()
+        {
+            var typeSyncVS = Type.GetType("UnityEditor.SyncVS, UnityEditor");
+            if (typeSyncVS == null)
+            {
+                SlnMergeUnityLogger.Instance.Debug("SlnMerge: UnityEditor.SyncVS class is not found.");
+                return;
+            }
+
+            var fieldSynchronizer = typeSyncVS.GetField("Synchronizer", BindingFlags.Static | BindingFlags.NonPublic);
+            if (fieldSynchronizer == null)
+            {
+                SlnMergeUnityLogger.Instance.Debug("SlnMerge: UnityEditor.SyncVS.Synchronizer field is not found.");
+                return;
+            }
+
+            var synchronizer = fieldSynchronizer.GetValue(null);
+            if (synchronizer == null)
+            {
+                SlnMergeUnityLogger.Instance.Debug("SlnMerge: UnityEditor has no Synchronizer");
+                return;
+            }
+
+            var typeSynchronizer = synchronizer.GetType();
+            var methodSync = typeSynchronizer.GetMethod("Sync");
+            if (methodSync == null)
+            {
+                SlnMergeUnityLogger.Instance.Debug("SlnMerge: Synchronizer.Sync method is not found.");
+                return;
+            }
+
+            SlnMergeUnityLogger.Instance.Debug("SlnMerge: Invoking Synchronizer");
+            methodSync.Invoke(synchronizer, Array.Empty<object>());
+        }
+
+        private static void WatchOverlaySolutionChanging()
+        {
+            if (!TryGetOverlaySolutionFilePath(_solutionFilePath, out var overlaySolutionFilePath))
+            {
+                return;
+            }
+
+            SlnMergeUnityLogger.Instance.Debug($"SlnMerge: Watching {overlaySolutionFilePath}");
+            _watcher?.Dispose();
+
+            _watcher = new FileSystemWatcher(Path.GetDirectoryName(overlaySolutionFilePath), Path.GetFileName(overlaySolutionFilePath));
+            _watcher.Changed += (sender, args) =>
+            {
+                SlnMergeUnityLogger.Instance.Debug($"SlnMerge: {args.ChangeType}: {args.FullPath} ({args.Name})");
+                InvokeSync();
+            };
+            _watcher.EnableRaisingEvents = true;
+        }
+
+        private static SlnMergeSettings LoadSettings(string solutionFilePath)
+        {
+            var slnFileDirectory = Path.GetDirectoryName(solutionFilePath);
+            var slnMergeSettings = SlnMergeSettings.Default;
+            var slnMergeSettingsPath = Path.Combine(slnFileDirectory, Path.GetFileName(solutionFilePath) + ".mergesettings");
+            if (File.Exists(slnMergeSettingsPath))
+            {
+                slnMergeSettings = SlnMergeSettings.FromFile(slnMergeSettingsPath);
+            }
+
+            return slnMergeSettings;
+        }
+
+        private static bool TryGetOverlaySolutionFilePath(string solutionFilePath, out string overlaySolutionFilePath)
+        {
+            var slnFileDirectory = Path.GetDirectoryName(solutionFilePath);
+            var slnMergeSettings = LoadSettings(solutionFilePath);
+
+            if (slnMergeSettings.Disabled)
+            {
+                overlaySolutionFilePath = null;
+                return false;
+            }
+
+            // Determine a overlay solution path.
+            overlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + ".Merge.sln");
+            if (!string.IsNullOrEmpty(slnMergeSettings.MergeTargetSolution))
+            {
+                overlaySolutionFilePath = PathUtility.NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
+            }
+            if (!File.Exists(overlaySolutionFilePath))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private class SlnMergeUnityLogger : ISlnMergeLogger
@@ -127,6 +238,8 @@ namespace SlnMerge
 
     public class SlnMergeSettings
     {
+        public static SlnMergeSettings Default { get; } = new SlnMergeSettings();
+
         public bool Disabled { get; set; }
         public NestedProject[] NestedProjects { get; set; }
 
@@ -157,12 +270,26 @@ namespace SlnMerge
     {
         internal const string GuidProjectTypeFolder = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
 
-        public static bool TryMerge(string solutionFilePath, ISlnMergeLogger logger, out string resultSolutionContent)
+        public class MergeResult
         {
-            return TryMerge(solutionFilePath, File.ReadAllText(solutionFilePath), logger, out resultSolutionContent);
+            public SolutionFile Merged { get; }
+            public SolutionFile Base { get; }
+            public SolutionFile Overlay { get; }
+
+            public MergeResult(SolutionFile mergedSolution, SolutionFile baseSolution, SolutionFile overlaySolution)
+            {
+                Merged = mergedSolution;
+                Base = baseSolution;
+                Overlay = overlaySolution;
+            }
         }
 
-        public static bool TryMerge(string solutionFilePath, string solutionFileContent, ISlnMergeLogger logger, out string resultSolutionContent)
+        public static bool TryMerge(string solutionFilePath, ISlnMergeLogger logger, out MergeResult result)
+        {
+            return TryMerge(solutionFilePath, File.ReadAllText(solutionFilePath), logger, out result);
+        }
+
+        public static bool TryMerge(string solutionFilePath, string solutionFileContent, ISlnMergeLogger logger, out MergeResult result)
         {
             try
             {
@@ -183,35 +310,35 @@ namespace SlnMerge
                 if (slnMergeSettings.Disabled)
                 {
                     logger.Debug("SlnMerge is currently disabled.");
-                    resultSolutionContent = solutionFileContent;
-                    return true;
+                    result = null;
+                    return false;
                 }
 
                 // Determine a overlay solution path.
                 var overlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + ".Merge.sln");
                 if (!string.IsNullOrEmpty(slnMergeSettings.MergeTargetSolution))
                 {
-                    overlaySolutionFilePath = NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
+                    overlaySolutionFilePath = PathUtility.NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
                 }
                 if (!File.Exists(overlaySolutionFilePath))
                 {
                     logger.Warn($"Cannot load the solution file to merge. skipped: {overlaySolutionFilePath}");
-                    resultSolutionContent = null;
+                    result = null;
                     return false;
                 }
 
                 // Merge the solutions.
-                var solutionFile = SolutionFile.Parse(solutionFilePath, solutionFileContent);
+                var baseSolutionFile = SolutionFile.Parse(solutionFilePath, solutionFileContent);
                 var overlaySolutionFile = SolutionFile.ParseFromFile(overlaySolutionFilePath);
-                var mergedSolutionFile = Merge(solutionFile, overlaySolutionFile, slnMergeSettings, logger);
+                var mergedSolutionFile = Merge(baseSolutionFile, overlaySolutionFile, slnMergeSettings, logger);
 
                 // Get file content of the merged solution.
-                resultSolutionContent = mergedSolutionFile.ToFileContent();
+                result = new MergeResult(mergedSolutionFile, baseSolutionFile, overlaySolutionFile);
             }
             catch (Exception e)
             {
                 logger.Error("Failed to merge the solutions", e);
-                resultSolutionContent = null;
+                result = null;
                 return false;
             }
 
@@ -241,8 +368,8 @@ namespace SlnMerge
                 {
                     if (!project.Value.IsFolder)
                     {
-                        var overlayProjectPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(overlaySolutionFile.Path), project.Value.Path));
-                        project.Value.Path = MakeRelative(solutionFile.Path, overlayProjectPathAbsolute);
+                        var overlayProjectPathAbsolute = PathUtility.NormalizePath(Path.Combine(Path.GetDirectoryName(overlaySolutionFile.Path), project.Value.Path));
+                        project.Value.Path = PathUtility.MakeRelative(solutionFile.Path, overlayProjectPathAbsolute);
                     }
                     solutionFile.Projects.Add(project.Key, project.Value);
                 }
@@ -437,12 +564,32 @@ namespace SlnMerge
             return projectByPath;
         }
 
-        private static string NormalizePath(string path)
+
+        [DebuggerDisplay("{nameof(SolutionTreeNode)}: {Path,nq}; IsFolder={IsFolder}; Children={Children.Count}")]
+        private class SolutionTreeNode
+        {
+            public List<SolutionTreeNode> Children { get; } = new List<SolutionTreeNode>();
+            public SolutionTreeNode Parent { get; set; }
+            public SolutionProject Project { get; }
+            public bool IsFolder => Project.IsFolder;
+
+            public string Path => (Parent == null ? "" : Parent.Path + "/") + Project.Name;
+
+            public SolutionTreeNode(SolutionProject project)
+            {
+                Project = project;
+            }
+        }
+    }
+
+    internal class PathUtility
+    {
+        public static string NormalizePath(string path)
         {
             return Path.GetFullPath(path.Replace(Path.DirectorySeparatorChar == '/' ? '\\' : '/', Path.DirectorySeparatorChar));
         }
 
-        private static string MakeRelative(string basePath, string targetPath)
+        public static string MakeRelative(string basePath, string targetPath)
         {
             var basePathParts = basePath.Split('/', '\\');
             var targetPathParts = targetPath.Split('/', '\\');
@@ -475,22 +622,6 @@ namespace SlnMerge
             }
 
             return targetPathFixed;
-        }
-
-        [DebuggerDisplay("{nameof(SolutionTreeNode)}: {Path,nq}; IsFolder={IsFolder}; Children={Children.Count}")]
-        private class SolutionTreeNode
-        {
-            public List<SolutionTreeNode> Children { get; } = new List<SolutionTreeNode>();
-            public SolutionTreeNode Parent { get; set; }
-            public SolutionProject Project { get; }
-            public bool IsFolder => Project.IsFolder;
-
-            public string Path => (Parent == null ? "" : Parent.Path + "/") + Project.Name;
-
-            public SolutionTreeNode(SolutionProject project)
-            {
-                Project = project;
-            }
         }
     }
 
