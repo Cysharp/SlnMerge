@@ -1,3 +1,5 @@
+using SlnMerge.Diagnostics;
+using SlnMerge.IO;
 using System;
 using System.IO;
 using System.Linq;
@@ -23,7 +25,7 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings(), SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
             var content = mergedSolutionFile.ToFileContent();
 
             Assert.Equal(@"..\Nantoka.Server\Nantoka.Server.csproj".Replace('\\', Path.DirectorySeparatorChar), mergedSolutionFile.Projects.First().Value.Path);
@@ -52,7 +54,7 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings(), SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
             var content = mergedSolutionFile.ToFileContent();
 
             Assert.Equal(@"..\Nantoka.Server\Nantoka.Server.csproj".Replace('\\', Path.DirectorySeparatorChar), mergedSolutionFile.Projects.First().Value.Path);
@@ -82,7 +84,7 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings(), SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
             Assert.Equal(@"D:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.csproj".Replace('\\', Path.DirectorySeparatorChar), mergedSolutionFile.Projects.First().Value.Path);
         }
 
@@ -108,7 +110,7 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings(), SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
             var content = mergedSolutionFile.ToFileContent();
             Assert.Equal(@"
 Microsoft Visual Studio Solution File, Format Version 12.00
@@ -140,17 +142,14 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(
-                baseSln,
-                overlaySln,
-                new SlnMergeSettings()
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings()
+            {
+                NestedProjects = new[]
                 {
-                    NestedProjects = new []
-                    {
-                        new SlnMergeSettings.NestedProject() { FolderPath = "New Folder1", ProjectName = "Assembly-CSharp" },
-                    }
-                },
-                SlnMergeNullLogger.Instance);
+                    new SlnMergeSettings.NestedProject() { FolderPath = "New Folder1", ProjectName = "Assembly-CSharp" },
+                }
+            }, SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
+
             var content = mergedSolutionFile.ToFileContent();
             var folderGuid = mergedSolutionFile.Projects.Values.First(x => x.IsFolder).Guid;
             Assert.Equal((@"
@@ -188,17 +187,14 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(
-                baseSln,
-                overlaySln,
-                new SlnMergeSettings()
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings()
+            {
+                NestedProjects = new[]
                 {
-                    NestedProjects = new[]
-                    {
                         new SlnMergeSettings.NestedProject() { FolderPath = "Folder1", ProjectName = "Assembly-CSharp" },
-                    }
-                },
-                SlnMergeNullLogger.Instance);
+                }
+            }, SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
+
             var content = mergedSolutionFile.ToFileContent();
             Assert.Equal(@"
 Microsoft Visual Studio Solution File, Format Version 12.00
@@ -240,17 +236,14 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(
-                baseSln,
-                overlaySln,
-                new SlnMergeSettings()
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings()
+            {
+                NestedProjects = new[]
                 {
-                    NestedProjects = new[]
-                    {
                         new SlnMergeSettings.NestedProject() { FolderPath = "Folder1", ProjectName = "Assembly-CSharp" },
-                    }
-                },
-                SlnMergeNullLogger.Instance);
+                }
+            }, SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
+
             var content = mergedSolutionFile.ToFileContent();
             Assert.Equal(@"
 Microsoft Visual Studio Solution File, Format Version 12.00
@@ -335,7 +328,7 @@ Global
 EndGlobal
 ".Trim());
 
-            var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
+            var mergedSolutionFile = new SlnMergeEngine(new SlnMergeSettings(), SlnMergeNullLogger.Instance, SlnMergeFileProvider.Instance).Merge(baseSln, overlaySln);
             var content = mergedSolutionFile.ToFileContent();
             Assert.Equal(@"
 Microsoft Visual Studio Solution File, Format Version 12.00

@@ -227,6 +227,9 @@ namespace SlnMerge.Unity
 
 namespace SlnMerge
 {
+    using global::SlnMerge.Diagnostics;
+    using global::SlnMerge.IO;
+
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -268,8 +271,6 @@ namespace SlnMerge
 
     public static class SlnMerge
     {
-        internal const string GuidProjectTypeFolder = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
-
         public class MergeResult
         {
             public SolutionFile Merged { get; }
@@ -330,7 +331,8 @@ namespace SlnMerge
                 // Merge the solutions.
                 var baseSolutionFile = SolutionFile.Parse(solutionFilePath, solutionFileContent);
                 var overlaySolutionFile = SolutionFile.ParseFromFile(overlaySolutionFilePath);
-                var mergedSolutionFile = Merge(baseSolutionFile, overlaySolutionFile, slnMergeSettings, logger);
+                var engine = new SlnMergeEngine(slnMergeSettings, logger, SlnMergeFileProvider.Instance);
+                var mergedSolutionFile = engine.Merge(baseSolutionFile, overlaySolutionFile);
 
                 // Get file content of the merged solution.
                 result = new MergeResult(mergedSolutionFile, baseSolutionFile, overlaySolutionFile);
@@ -344,23 +346,67 @@ namespace SlnMerge
 
             return true;
         }
+    }
 
-        public static SolutionFile Merge(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+    public class SlnMergeEngine
+    {
+        internal const string GuidProjectTypeFolder = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
+
+        private readonly SlnMergeSettings _settings;
+        private readonly ISlnMergeLogger _logger;
+        private readonly ISlnMergeFileProvider _fileProvider;
+
+        public SlnMergeEngine(SlnMergeSettings settings, ISlnMergeLogger logger, ISlnMergeFileProvider fileProvider)
         {
-            logger.Debug($"Merge solution: Base={solutionFile.Path}; Overlay={overlaySolutionFile.Path}");
+            _settings = settings;
+            _logger = logger;
+            _fileProvider = fileProvider;
+        }
+
+        public (string[] Additions, string[] Deletions, string[] Updates) GetDifferences(SolutionFile solutionFile, SolutionFile overlaySolutionFile)
+        {
+            var additions = solutionFile.Projects.Keys.Except(overlaySolutionFile.Projects.Keys);
+            var solutionFileDir = Path.GetDirectoryName(solutionFile.Path);
+            var overlaySolutionFileDir = Path.GetDirectoryName(overlaySolutionFile.Path);
+            additions = additions.Where(x =>
+            {
+                var path = PathUtility.NormalizePath(Path.Combine(solutionFileDir, solutionFile.Projects[x].Path));
+                var isUnityProject = _fileProvider.ReadAsString(path).Contains("{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1}", StringComparison.OrdinalIgnoreCase);
+                return !isUnityProject;
+            });
+
+            var deletions = overlaySolutionFile.Projects.Keys.Except(solutionFile.Projects.Keys);
+
+            var updates = solutionFile.Projects.Keys.Intersect(overlaySolutionFile.Projects.Keys);
+            updates = updates.Where(x =>
+            {
+                var projUpdated = solutionFile.Projects[x];
+                var projOriginal = overlaySolutionFile.Projects[x];
+
+                return projUpdated.Path != projOriginal.Path ||
+                    projUpdated.Name != projOriginal.Name ||
+                    !projUpdated.Children.SequenceEqual(projOriginal.Children);
+            });
+
+            return (additions.ToArray(), deletions.ToArray(), updates.ToArray());
+        }
+
+        public SolutionFile Merge(SolutionFile solutionFile, SolutionFile overlaySolutionFile)
+        {
+            _logger.Debug($"Merge solution: Base={solutionFile.Path}; Overlay={overlaySolutionFile.Path}");
 
             var mergedSolutionFile = solutionFile.Clone();
 
-            MergeProjects(mergedSolutionFile, overlaySolutionFile, settings, logger);
+            MergeProjects(mergedSolutionFile, overlaySolutionFile);
 
-            MergeGlobalSections(mergedSolutionFile, overlaySolutionFile, settings, logger);
+            MergeGlobalSections(mergedSolutionFile, overlaySolutionFile);
 
-            ModifySolutionFolders(mergedSolutionFile, settings, logger);
+            ModifySolutionFolders(mergedSolutionFile);
 
             return mergedSolutionFile;
         }
 
-        private static void MergeProjects(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+        private void MergeProjects(SolutionFile solutionFile, SolutionFile overlaySolutionFile)
         {
             foreach (var project in overlaySolutionFile.Projects)
             {
@@ -380,7 +426,7 @@ namespace SlnMerge
             }
         }
 
-        private static void MergeGlobalSections(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+        private void MergeGlobalSections(SolutionFile solutionFile, SolutionFile overlaySolutionFile)
         {
             foreach (var sectionKeyValue in overlaySolutionFile.Global.Sections)
             {
@@ -399,9 +445,9 @@ namespace SlnMerge
             }
         }
 
-        private static void ModifySolutionFolders(SolutionFile solutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+        private void ModifySolutionFolders(SolutionFile solutionFile)
         {
-            if (settings.NestedProjects == null || settings.NestedProjects.Length == 0) return;
+            if (_settings.NestedProjects == null || _settings.NestedProjects.Length == 0) return;
 
             // Build a solution folder tree.
             var solutionTree = BuildSolutionFlatTree(solutionFile);
@@ -415,7 +461,7 @@ namespace SlnMerge
 
             // Prepare to add nested projects.
             var nestedProjects = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var nestedProject in settings.NestedProjects)
+            foreach (var nestedProject in _settings.NestedProjects)
             {
                 var nestedProjectGuid = default(string);
                 var nestedProjectFolderGuid = default(string);
@@ -1013,7 +1059,7 @@ namespace SlnMerge
         public string Name { get; set; }
         public string Path { get; set; }
 
-        public bool IsFolder => string.Compare(TypeGuid, SlnMerge.GuidProjectTypeFolder, StringComparison.OrdinalIgnoreCase) == 0;
+        public bool IsFolder => string.Compare(TypeGuid, SlnMergeEngine.GuidProjectTypeFolder, StringComparison.OrdinalIgnoreCase) == 0;
 
         protected override string Tag => "Project";
         protected override string Category => $"\"{TypeGuid}\"";
@@ -1104,6 +1150,35 @@ namespace SlnMerge
             return newNode;
         }
     }
+}
+
+namespace SlnMerge.IO
+{
+    using System;
+    using System.IO;
+    using System.Collections.Generic;
+
+    public interface ISlnMergeFileProvider
+    {
+        string ReadAsString(string path);
+    }
+
+    public class SlnMergeFileProvider : ISlnMergeFileProvider
+    {
+        public static ISlnMergeFileProvider Instance { get; } = new SlnMergeFileProvider();
+        public string ReadAsString(string path) => File.ReadAllText(path);
+    }
+
+    public class SlnMergeVirtualFileProvider : ISlnMergeFileProvider
+    {
+        public Dictionary<string, string> FileContentByPath { get; } = new Dictionary<string, string>();
+        public string ReadAsString(string path) => FileContentByPath[path];
+    }
+}
+
+namespace SlnMerge.Diagnostics
+{
+    using System;
 
     public interface ISlnMergeLogger
     {
