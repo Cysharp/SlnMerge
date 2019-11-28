@@ -370,25 +370,47 @@ namespace SlnMerge
             var overlaySolutionFileDir = Path.GetDirectoryName(overlaySolutionFile.Path);
             additions = additions.Where(x =>
             {
-                var path = PathUtility.NormalizePath(Path.Combine(solutionFileDir, solutionFile.Projects[x].Path));
+                var path = PathUtility.MakeAbsolute(solutionFileDir, solutionFile.Projects[x].Path);
                 var isUnityProject = _fileProvider.ReadAsString(path).Contains("{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1}", StringComparison.OrdinalIgnoreCase);
                 return !isUnityProject;
             });
 
             var deletions = overlaySolutionFile.Projects.Keys.Except(solutionFile.Projects.Keys);
 
-            var updates = solutionFile.Projects.Keys.Intersect(overlaySolutionFile.Projects.Keys);
-            updates = updates.Where(x =>
+            var updateCandidates = solutionFile.Projects.Keys.Intersect(overlaySolutionFile.Projects.Keys);
+            var updates = updateCandidates.Where(x =>
             {
                 var projUpdated = solutionFile.Projects[x];
                 var projOriginal = overlaySolutionFile.Projects[x];
 
-                return projUpdated.Path != projOriginal.Path ||
+                // The paths may be adjusted when merging. We must make absolute path before comparing.
+                var updatedPath = PathUtility.MakeAbsolute(solutionFileDir, projUpdated.Path);
+                var originalPath = PathUtility.MakeAbsolute(overlaySolutionFileDir, projOriginal.Path);
+
+                return updatedPath != originalPath ||
                     projUpdated.Name != projOriginal.Name ||
+                    !CompareSections(projUpdated, projOriginal) ||
                     !projUpdated.Children.SequenceEqual(projOriginal.Children);
             });
 
             return (additions.ToArray(), deletions.ToArray(), updates.ToArray());
+        }
+
+        private bool CompareSections(SolutionProject a, SolutionProject b)
+        {
+            if (a.Sections.Count != b.Sections.Count) return false;
+            return a.Sections.All(x => b.Sections.TryGetValue(x.Key, out var bValue) && CompareSection(x.Value, bValue));
+        }
+
+        private bool CompareSection(SolutionProjectSection a, SolutionProjectSection b)
+        {
+            if (a.Value != b.Value) return false;
+            if (a.Category != b.Category) return false;
+            if (!a.Children.SequenceEqual(b.Children)) return false;
+            if (a.Values.Count != b.Values.Count) return false;
+            if (!a.Values.All(x => b.Values.TryGetValue(x.Key, out var bValue) && x.Value == bValue)) return false;
+
+            return true;
         }
 
         public SolutionFile Merge(SolutionFile solutionFile, SolutionFile overlaySolutionFile)
@@ -625,49 +647,6 @@ namespace SlnMerge
             {
                 Project = project;
             }
-        }
-    }
-
-    internal class PathUtility
-    {
-        public static string NormalizePath(string path)
-        {
-            return Path.GetFullPath(path.Replace(Path.DirectorySeparatorChar == '/' ? '\\' : '/', Path.DirectorySeparatorChar));
-        }
-
-        public static string MakeRelative(string basePath, string targetPath)
-        {
-            var basePathParts = basePath.Split('/', '\\');
-            var targetPathParts = targetPath.Split('/', '\\');
-
-            var targetPathFixed = targetPath;
-            for (var i = 0; i < Math.Min(basePathParts.Length, targetPathParts.Length); i++)
-            {
-                var basePathPrefix = string.Join("/", basePathParts.Take(i + 1));
-                var targetPathPrefix = string.Join("/", targetPathParts.Take(i + 1));
-
-                if (basePathPrefix == targetPathPrefix)
-                {
-                    var pathPrefix = basePathPrefix;
-                    var upperDirCount = (basePathParts.Length - i - 2); // excepts a filename
-
-                    var sb = new StringBuilder();
-                    for (var j = 0; j < upperDirCount; j++)
-                    {
-                        sb.Append("..");
-                        sb.Append(Path.DirectorySeparatorChar);
-                    }
-                    sb.Append(targetPath.Substring(pathPrefix.Length + 1));
-
-                    targetPathFixed = sb.ToString();
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return targetPathFixed;
         }
     }
 
@@ -912,7 +891,7 @@ namespace SlnMerge
         Unknown,
     }
 
-    public abstract class SolutionDocumentNode
+    public abstract class SolutionDocumentNode : IEquatable<SolutionDocumentNode>
     {
         public SolutionDocumentNode Parent { get; }
         public List<SolutionDocumentNode> Children { get; } = new List<SolutionDocumentNode>();
@@ -936,6 +915,29 @@ namespace SlnMerge
         }
 
         public abstract SolutionDocumentNode Clone(SolutionDocumentNode newParent);
+
+         bool IEquatable<SolutionDocumentNode>.Equals(SolutionDocumentNode other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(Parent, other.Parent) && Children.SequenceEqual(other.Children);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SolutionDocumentNode) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Parent != null ? Parent.GetHashCode() : 0) * 397) ^ (Children != null ? Children.GetHashCode() : 0);
+            }
+        }
     }
 
     public abstract class SolutionSectionContainer<TSection> : SolutionDocumentNode
@@ -1155,8 +1157,10 @@ namespace SlnMerge
 namespace SlnMerge.IO
 {
     using System;
-    using System.IO;
     using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Text;
 
     public interface ISlnMergeFileProvider
     {
@@ -1174,6 +1178,55 @@ namespace SlnMerge.IO
         public Dictionary<string, string> FileContentByPath { get; } = new Dictionary<string, string>();
         public string ReadAsString(string path) => FileContentByPath[path];
     }
+
+    internal class PathUtility
+    {
+        public static string MakeAbsolute(string baseDirPath, string path)
+        {
+            return NormalizePath(Path.Combine(baseDirPath, path));
+        }
+
+        public static string NormalizePath(string path)
+        {
+            return Path.GetFullPath(path.Replace(Path.DirectorySeparatorChar == '/' ? '\\' : '/', Path.DirectorySeparatorChar));
+        }
+
+        public static string MakeRelative(string baseDirectoryPath, string targetPath)
+        {
+            var basePathParts = baseDirectoryPath.Split('/', '\\');
+            var targetPathParts = targetPath.Split('/', '\\');
+
+            var targetPathFixed = targetPath;
+            for (var i = 0; i < Math.Min(basePathParts.Length, targetPathParts.Length); i++)
+            {
+                var basePathPrefix = string.Join("/", basePathParts.Take(i + 1));
+                var targetPathPrefix = string.Join("/", targetPathParts.Take(i + 1));
+
+                if (basePathPrefix == targetPathPrefix)
+                {
+                    var pathPrefix = basePathPrefix;
+                    var upperDirCount = (basePathParts.Length - i - 2); // excepts a filename
+
+                    var sb = new StringBuilder();
+                    for (var j = 0; j < upperDirCount; j++)
+                    {
+                        sb.Append("..");
+                        sb.Append(Path.DirectorySeparatorChar);
+                    }
+                    sb.Append(targetPath.Substring(pathPrefix.Length + 1));
+
+                    targetPathFixed = sb.ToString();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return targetPathFixed;
+        }
+    }
+
 }
 
 namespace SlnMerge.Diagnostics
