@@ -553,6 +553,8 @@ namespace SlnMerge
         {
             var solutionFile = new SolutionFile(path);
             SolutionDocumentNode current = solutionFile;
+
+            var isProjectMarkerAdded = false;
             foreach (var line in contentLines)
             {
                 var parsedLine = SolutionDocLine.ParseLine(line);
@@ -570,6 +572,13 @@ namespace SlnMerge
                                 continue;
                             }
                             sln.Projects.Add(proj.Guid, proj);
+
+                            // The project is first item of projects.
+                            if (sln.Projects.Count == 1)
+                            {
+                                sln.Children.Add(new ProjectsNodeMarker(sln));
+                                isProjectMarkerAdded = true;
+                            }
                         }
                         break;
                     case SlnDocLineType.ProjectSectionBegin:
@@ -591,6 +600,15 @@ namespace SlnMerge
                             if (!(current is SolutionFile)) throw new InvalidOperationException("Global must be located under Solution");
                             var sln = current as SolutionFile;
                             sln.Global = new SolutionGlobal(current);
+                            
+                            if (!isProjectMarkerAdded)
+                            {
+                                // `Project` is always puts before `Global`.
+                                sln.Children.Add(new ProjectsNodeMarker(sln));
+                                isProjectMarkerAdded = true;
+                            }
+                            sln.Children.Add(new GlobalNodeMarker(sln));
+
                             current = sln.Global;
                         }
                         break;
@@ -622,14 +640,53 @@ namespace SlnMerge
             return solutionFile;
         }
 
-        public override void Write(LineWriter writer)
+        private class ProjectsNodeMarker : SolutionDocumentNode
         {
-            base.Write(writer);
-            foreach (var proj in Projects)
+            private readonly SolutionFile _solution;
+
+            public ProjectsNodeMarker(SolutionFile parentSolution) : base(parentSolution)
             {
-                proj.Value.Write(writer);
+                _solution = parentSolution;
             }
-            Global.Write(writer);
+
+            public override void Write(LineWriter writer)
+            {
+                foreach (var proj in _solution.Projects)
+                {
+                    proj.Value.Write(writer);
+                }
+            }
+
+            public override void AddChild(SolutionDocLine line)
+                => throw new NotSupportedException();
+
+            public override SolutionDocumentNode Clone(SolutionDocumentNode newParent)
+            {
+                return new ProjectsNodeMarker((SolutionFile)newParent);
+            }
+        }
+
+        private class GlobalNodeMarker : SolutionDocumentNode
+        {
+            private readonly SolutionFile _solution;
+
+            public GlobalNodeMarker(SolutionFile parentSolution) : base(parentSolution)
+            {
+                _solution = parentSolution;
+            }
+
+            public override void Write(LineWriter writer)
+            {
+                _solution.Global.Write(writer);
+            }
+
+            public override void AddChild(SolutionDocLine line)
+                => throw new NotSupportedException();
+
+            public override SolutionDocumentNode Clone(SolutionDocumentNode newParent)
+            {
+                return new GlobalNodeMarker((SolutionFile)newParent);
+            }
         }
     }
 

@@ -124,6 +124,43 @@ EndGlobal
 
 
         [Fact]
+        public void Merge_TrivialLines_Tail()
+        {
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Global
+EndGlobal
+".Trim() + "\r\n");
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29509.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\Nantoka.Server\Nantoka.Server.csproj"", ""{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}""
+EndProject
+Global
+EndGlobal
+".Trim());
+
+            var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
+            var content = mergedSolutionFile.ToFileContent();
+            Assert.Equal(@"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\Nantoka.Server\Nantoka.Server.csproj"", ""{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}""
+EndProject
+Global
+EndGlobal
+".Trim() + "\r\n", content.Trim() + "\r\n");
+        }
+
+
+        [Fact]
         public void Merge_SolutionFolder_NewFolder()
         {
             var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
