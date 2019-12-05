@@ -39,11 +39,15 @@ mergesettings ファイルには次の設定項目があります。
     - `NestedProject/ProjectGuid`: プロジェクトGUID (プロジェクト名と排他)
 
 ### ソリューションフォルダーに追加する
-`NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。
+`NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。ベースのソリューションにソリューションフォルダーが存在しない場合には自動で追加しますが、ソリューションフォルダーの定義が設定ファイルに必要です。
 
 ```xml
 <SlnMergeSettings>
     <MergeTargetSolution>..\ChatApp.Server.sln</MergeTargetSolution>
+    <SolutionFolders>
+        <!-- Unity という名前のソリューションフォルダーを GUID とともに定義する -->
+        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}">
+    </SolutionFolder>
     <NestedProjects>
         <NestedProject ProjectName="Assembly-CSharp" FolderPath="Unity" />
         <NestedProject ProjectName="Assembly-CSharp-Editor" FolderPath="Unity" />
