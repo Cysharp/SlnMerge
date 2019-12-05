@@ -128,9 +128,21 @@ namespace SlnMerge
     public class SlnMergeSettings
     {
         public bool Disabled { get; set; }
+
+        public SolutionFolder[] SolutionFolders { get; set; }
         public NestedProject[] NestedProjects { get; set; }
 
         public string MergeTargetSolution { get; set; }
+
+
+        public class SolutionFolder
+        {
+            [XmlAttribute]
+            public string FolderPath { get; set; }
+
+            [XmlAttribute]
+            public string Guid { get; set; }
+        }
 
         public class NestedProject
         {
@@ -287,6 +299,8 @@ namespace SlnMerge
             }
 
             // Prepare to add nested projects.
+            var definedSolutionFolders = (settings.SolutionFolders ?? Array.Empty<SlnMergeSettings.SolutionFolder>())
+                .ToDictionary(k => k.FolderPath.Replace('\\', '/'), v => v.Guid);
             var nestedProjects = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var nestedProject in settings.NestedProjects)
             {
@@ -346,9 +360,14 @@ namespace SlnMerge
                             else
                             {
                                 // Create a new solution folder.
+                                if (!definedSolutionFolders.TryGetValue(path, out var guid))
+                                {
+                                    throw new Exception($"Path '{path}' doesn't exist in the Solution or Solution Folder definitions. To create a new folder, you need to define SolutionFolder in .mergesettings.");
+                                }
+
                                 var newFolder = new SolutionProject(solutionFile,
                                     typeGuid: GuidProjectTypeFolder,
-                                    guid: Guid.NewGuid().ToString("B").ToUpper(),
+                                    guid: guid.ToUpper(),
                                     name: pathParts[i],
                                     path: pathParts[i]
                                 );
