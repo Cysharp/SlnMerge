@@ -274,6 +274,26 @@ namespace SlnMerge
             {
                 if (!ctx.MergedSolutionFile.Projects.ContainsKey(project.Key))
                 {
+                    // If a solution contains a project that has same name, resolve conflict by resolution strategy.
+                    if (ctx.MergedSolutionFile.Projects.Any(x => x.Value.Name == project.Value.Name))
+                    {
+                        if (ctx.Settings.ProjectConflictResolution == ProjectConflictResolution.PreserveUnity)
+                        {
+                            // Ignore Overlay's project
+                            continue;
+                        }
+                        else if (ctx.Settings.ProjectConflictResolution == ProjectConflictResolution.PreserveOverlay)
+                        {
+                            // Remove Unity generated project
+                            var duplicatedProject = ctx.MergedSolutionFile.Projects.First(x => x.Value.Name == project.Value.Name);
+                            ctx.MergedSolutionFile.Projects.Remove(duplicatedProject.Key);
+                        }
+                        else
+                        {
+                            // Preserve all projects
+                        }
+                    }
+
                     if (!project.Value.IsFolder)
                     {
                         var overlayProjectPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), project.Value.Path));
