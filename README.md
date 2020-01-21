@@ -32,11 +32,16 @@ You can specify the target solution to merge by `MergeTargetSolution` element.
 ## Settings
 
 ### Add projects to solution folders
-You can use `NestedProjects` settings to move projects to solution folders. When a solution folder doesn't exist, SlnMerge will create the solution folder automatically.
+You can use `NestedProjects` settings to move projects to solution folders.
+When a solution folder doesn't exist, SlnMerge will add the solution folder to the solution automatically. But, you need to define a solution folder as `SolutionFolder` in mergesettings.
 
 ```xml
 <SlnMergeSettings>
     <MergeTargetSolution>..\ChatApp.Server.sln</MergeTargetSolution>
+    <SolutionFolders>
+        <!-- Define a solution folder named 'Unity' with GUID -->
+        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}">
+    </SolutionFolder>
     <NestedProjects>
         <NestedProject ProjectName="Assembly-CSharp" FolderPath="Unity" />
         <NestedProject ProjectName="Assembly-CSharp-Editor" FolderPath="Unity" />
