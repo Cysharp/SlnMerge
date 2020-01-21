@@ -37,6 +37,7 @@ mergesettings ファイルには次の設定項目があります。
     - `NestedProject/FolderGuid`: ソリューション上のフォルダーのGUID (パスと排他)
     - `NestedProject/ProjectName`: プロジェクト名 (GUIDと排他)
     - `NestedProject/ProjectGuid`: プロジェクトGUID (プロジェクト名と排他)
+- `ProjectConflictResolution`: 同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
 
 ### ソリューションフォルダーに追加する
 `NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。ベースのソリューションにソリューションフォルダーが存在しない場合には自動で追加しますが、ソリューションフォルダーの定義が設定ファイルに必要です。
