@@ -129,6 +129,7 @@ namespace SlnMerge
     {
         public bool Disabled { get; set; }
         public NestedProject[] NestedProjects { get; set; }
+        public ProjectConflictResolution ProjectConflictResolution { get; set; }
 
         public string MergeTargetSolution { get; set; }
 
@@ -151,6 +152,22 @@ namespace SlnMerge
                 return (SlnMergeSettings)new XmlSerializer(typeof(SlnMergeSettings)).Deserialize(stream);
             }
         }
+    }
+
+    public enum ProjectConflictResolution
+    {
+        /// <summary>
+        /// Preseve All projects.
+        /// </summary>
+        PreserveAll,
+        /// <summary>
+        /// Preserve Unity generated project.
+        /// </summary>
+        PreserveUnity,
+        /// <summary>
+        /// Preserve Overlay original project.
+        /// </summary>
+        PreserveOverlay,
     }
 
     public static class SlnMerge
@@ -218,33 +235,51 @@ namespace SlnMerge
             return true;
         }
 
+        private class SlnMergeMergeContext
+        {
+            public SolutionFile SolutionFile { get; }
+            public SolutionFile OverlaySolutionFile { get; }
+            public SolutionFile MergedSolutionFile { get; }
+            public SlnMergeSettings Settings { get; }
+            public ISlnMergeLogger Logger { get; }
+
+            public SlnMergeMergeContext(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SolutionFile mergedSolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+            {
+                SolutionFile = solutionFile;
+                OverlaySolutionFile = overlaySolutionFile;
+                MergedSolutionFile = mergedSolutionFile;
+                Settings = settings;
+                Logger = logger;
+            }
+        }
+
         public static SolutionFile Merge(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
         {
             logger.Debug($"Merge solution: Base={solutionFile.Path}; Overlay={overlaySolutionFile.Path}");
 
-            var mergedSolutionFile = solutionFile.Clone();
+            var ctx = new SlnMergeMergeContext(solutionFile, overlaySolutionFile, solutionFile.Clone(), settings, logger);
 
-            MergeProjects(mergedSolutionFile, overlaySolutionFile, settings, logger);
+            MergeProjects(ctx);
 
-            MergeGlobalSections(mergedSolutionFile, overlaySolutionFile, settings, logger);
+            MergeGlobalSections(ctx);
 
-            ModifySolutionFolders(mergedSolutionFile, settings, logger);
+            ModifySolutionFolders(ctx);
 
-            return mergedSolutionFile;
+            return ctx.MergedSolutionFile;
         }
 
-        private static void MergeProjects(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+        private static void MergeProjects(SlnMergeMergeContext ctx)
         {
-            foreach (var project in overlaySolutionFile.Projects)
+            foreach (var project in ctx.OverlaySolutionFile.Projects)
             {
-                if (!solutionFile.Projects.ContainsKey(project.Key))
+                if (!ctx.MergedSolutionFile.Projects.ContainsKey(project.Key))
                 {
                     if (!project.Value.IsFolder)
                     {
-                        var overlayProjectPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(overlaySolutionFile.Path), project.Value.Path));
-                        project.Value.Path = MakeRelative(solutionFile.Path, overlayProjectPathAbsolute);
+                        var overlayProjectPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), project.Value.Path));
+                        project.Value.Path = MakeRelative(ctx.MergedSolutionFile.Path, overlayProjectPathAbsolute);
                     }
-                    solutionFile.Projects.Add(project.Key, project.Value);
+                    ctx.MergedSolutionFile.Projects.Add(project.Key, project.Value);
                 }
                 else
                 {
@@ -253,11 +288,11 @@ namespace SlnMerge
             }
         }
 
-        private static void MergeGlobalSections(SolutionFile solutionFile, SolutionFile overlaySolutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+        private static void MergeGlobalSections(SlnMergeMergeContext ctx)
         {
-            foreach (var sectionKeyValue in overlaySolutionFile.Global.Sections)
+            foreach (var sectionKeyValue in ctx.OverlaySolutionFile.Global.Sections)
             {
-                if (solutionFile.Global.Sections.TryGetValue(sectionKeyValue.Key, out var targetSection))
+                if (ctx.MergedSolutionFile.Global.Sections.TryGetValue(sectionKeyValue.Key, out var targetSection))
                 {
                     foreach (var keyValue in sectionKeyValue.Value.Values)
                     {
@@ -267,28 +302,28 @@ namespace SlnMerge
                 }
                 else
                 {
-                    solutionFile.Global.Sections.Add(sectionKeyValue.Key, sectionKeyValue.Value);
+                    ctx.MergedSolutionFile.Global.Sections.Add(sectionKeyValue.Key, sectionKeyValue.Value);
                 }
             }
         }
 
-        private static void ModifySolutionFolders(SolutionFile solutionFile, SlnMergeSettings settings, ISlnMergeLogger logger)
+        private static void ModifySolutionFolders(SlnMergeMergeContext ctx)
         {
-            if (settings.NestedProjects == null || settings.NestedProjects.Length == 0) return;
+            if (ctx.Settings.NestedProjects == null || ctx.Settings.NestedProjects.Length == 0) return;
 
             // Build a solution folder tree.
-            var solutionTree = BuildSolutionFlatTree(solutionFile);
+            var solutionTree = BuildSolutionFlatTree(ctx.MergedSolutionFile);
 
             // Create a NestedProject section in the solution if it does not exist.
-            if (!solutionFile.Global.Sections.TryGetValue(("NestedProjects", "preSolution"), out var section))
+            if (!ctx.MergedSolutionFile.Global.Sections.TryGetValue(("NestedProjects", "preSolution"), out var section))
             {
-                section = new SolutionGlobalSection(solutionFile.Global, "NestedProjects", "preSolution");
-                solutionFile.Global.Sections.Add((section.Category, section.Value), section);
+                section = new SolutionGlobalSection(ctx.MergedSolutionFile.Global, "NestedProjects", "preSolution");
+                ctx.MergedSolutionFile.Global.Sections.Add((section.Category, section.Value), section);
             }
 
             // Prepare to add nested projects.
             var nestedProjects = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var nestedProject in settings.NestedProjects)
+            foreach (var nestedProject in ctx.Settings.NestedProjects)
             {
                 var nestedProjectGuid = default(string);
                 var nestedProjectFolderGuid = default(string);
@@ -302,7 +337,7 @@ namespace SlnMerge
                 else
                 {
                     // by Name
-                    var proj = solutionFile.Projects.Values.FirstOrDefault(x => x.Name == nestedProject.ProjectName);
+                    var proj = ctx.MergedSolutionFile.Projects.Values.FirstOrDefault(x => x.Name == nestedProject.ProjectName);
                     if (proj != null)
                     {
                         nestedProjectGuid = proj.Guid;
@@ -346,13 +381,13 @@ namespace SlnMerge
                             else
                             {
                                 // Create a new solution folder.
-                                var newFolder = new SolutionProject(solutionFile,
+                                var newFolder = new SolutionProject(ctx.MergedSolutionFile,
                                     typeGuid: GuidProjectTypeFolder,
                                     guid: Guid.NewGuid().ToString("B").ToUpper(),
                                     name: pathParts[i],
                                     path: pathParts[i]
                                 );
-                                solutionFile.Projects.Add(newFolder.Guid, newFolder);
+                                ctx.MergedSolutionFile.Projects.Add(newFolder.Guid, newFolder);
 
                                 // If the solution folder has a parent folder, add the created folder as a child immediately.
                                 if (!string.IsNullOrEmpty(parentPath))
@@ -361,7 +396,7 @@ namespace SlnMerge
                                 }
 
                                 // Rebuild the solution tree.
-                                solutionTree = BuildSolutionFlatTree(solutionFile);
+                                solutionTree = BuildSolutionFlatTree(ctx.MergedSolutionFile);
 
                                 nestedProjectFolderGuid = newFolder.Guid;
                             }
@@ -378,11 +413,11 @@ namespace SlnMerge
                 {
                     throw new Exception($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
                 }
-                if (!solutionFile.Projects.ContainsKey(nestedProjectGuid))
+                if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectGuid))
                 {
                     throw new Exception($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
                 }
-                if (!solutionFile.Projects.ContainsKey(nestedProjectFolderGuid))
+                if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectFolderGuid))
                 {
                     throw new Exception($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
                 }
