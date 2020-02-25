@@ -41,6 +41,9 @@ The mergesettings file has the following settings:
     - `NestedProject/ProjectName`: Project name (mutally exclusive with ProjectGuid)
     - `NestedProject/ProjectGuid`: Project GUID (mutally exclusive with ProjectName)
 - `ProjectConflictResolution`: Processing strategy when a solution contains a project with the same name (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
+    - `PreserveAll`: Preserve all projects (both Unity generated projects and original projects)
+    - `PreserveUnity`: Preserve Unity generated projects. (discard original project in a overlay solution)
+    - `PreserveOverlay`: Preserve original projects in a overlay solution. (discard Unity generated projects from a merged solution)
 
 ### Add projects to solution folders
 You can use `NestedProjects` settings to move projects to solution folders.
