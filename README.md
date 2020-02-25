@@ -33,14 +33,14 @@ You can specify the target solution to merge by `MergeTargetSolution` element.
 
 The mergesettings file has the following settings:
 
--`Disabled`: Disable SlnMerge (default:` false`)
--`MergeTargetSolution`: Path of the solution you want to merge
--`NestedProjects`: Specify the projects to nest. Usually used as a solution folder
-    -`NestedProject/FolderPath`: Folder path on solution (created if it doesn't exist; mutally exclusive with FolderGuid)
-    -`NestedProject/FolderGuid`: GUID of folder on solution (mutally exclusive with FolderPath)
-    -`NestedProject/ProjectName`: Project name (mutally exclusive with ProjectGuid)
-    -`NestedProject/ProjectGuid`: Project GUID (mutally exclusive with ProjectName)
--`ProjectConflictResolution`: Processing strategy when a solution contains a project with the same name (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
+- `Disabled`: Disable SlnMerge (default:` false`)
+- `MergeTargetSolution`: Path of the solution you want to merge
+- `NestedProjects`: Specify the projects to nest. Usually used as a solution folder
+    - `NestedProject/FolderPath`: Folder path on solution (created if it doesn't exist; mutally exclusive with FolderGuid)
+    - `NestedProject/FolderGuid`: GUID of folder on solution (mutally exclusive with FolderPath)
+    - `NestedProject/ProjectName`: Project name (mutally exclusive with ProjectGuid)
+    - `NestedProject/ProjectGuid`: Project GUID (mutally exclusive with ProjectName)
+- `ProjectConflictResolution`: Processing strategy when a solution contains a project with the same name (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
 
 ### Add projects to solution folders
 You can use `NestedProjects` settings to move projects to solution folders.
