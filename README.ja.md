@@ -59,5 +59,17 @@ mergesettings ファイルには次の設定項目があります。
 </SlnMergeSettings>
 ```
 
+## トラブルシューティング
+### 常にソリューションファイルが再生成され、Visual Studioに競合ダイアログが表示される
+1. Unity Editor を閉じる
+2. Unity Editor が生成した .csproj と .sln を削除する
+3. プロジェクトを Unity Editor で開きなおす
+
+マージ対象のプロジェクトと Unity が生成するソリューションで同名のプロジェクトが存在する場合、`ProjectConflictResolution` オプションを使用して3つの方法でコンフリクトを解決できます。
+
+- すべてのプロジェクトを維持 (デフォルト)
+- マージ対象のソリューションのプロジェクトを維持
+- Unity が生成したソリューションのプロジェクトを維持
+
 ## ライセンス
 MIT License
