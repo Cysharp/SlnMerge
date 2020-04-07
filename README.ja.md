@@ -36,6 +36,7 @@ mergesettings ファイルには次の設定項目があります。
     - `NestedProject/FolderPath`: ソリューション上のフォルダーパス (存在しない場合は生成。GUIDと排他)
     - `NestedProject/FolderGuid`: ソリューション上のフォルダーのGUID (パスと排他)
     - `NestedProject/ProjectName`: プロジェクト名 (GUIDと排他)
+        - ワイルドカードが使用可能です (`?`, `*`)
     - `NestedProject/ProjectGuid`: プロジェクトGUID (プロジェクト名と排他)
 - `ProjectConflictResolution`: マージ元とマージ先でソリューション内に同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
     - `PreserveAll`: すべてのプロジェクトを残します (Unity とマージ対象のソリューションのプロジェクトの両方)

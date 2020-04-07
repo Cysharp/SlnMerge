@@ -39,6 +39,7 @@ The mergesettings file has the following settings:
     - `NestedProject/FolderPath`: Folder path on solution (created if it doesn't exist; mutally exclusive with FolderGuid)
     - `NestedProject/FolderGuid`: GUID of folder on solution (mutally exclusive with FolderPath)
     - `NestedProject/ProjectName`: Project name (mutally exclusive with ProjectGuid)
+        - Wildcard is available (`?`, `*`)
     - `NestedProject/ProjectGuid`: Project GUID (mutally exclusive with ProjectName)
 - `ProjectConflictResolution`: Processing strategy when a solution contains a project with the same name (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
     - `PreserveAll`: Preserve all projects (both Unity generated projects and original projects)
