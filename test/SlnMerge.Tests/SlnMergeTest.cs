@@ -209,9 +209,8 @@ EndGlobal
 ").Trim(), content.Trim());
         }
 
-
         [Fact]
-        public void Merge_SolutionFolder_NewFolder_NotExistsInDefinition()
+        public void Merge_SolutionFolder_NewFolder_ProjectDoesNotExist_Warning()
         {
             var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
 Microsoft Visual Studio Solution File, Format Version 12.00
@@ -227,7 +226,106 @@ Global
 EndGlobal
 ".Trim());
 
-            try
+            var mergedSolutionFile = SlnMerge.Merge(
+                baseSln,
+                overlaySln,
+                new SlnMergeSettings()
+                {
+                    SolutionFolders = new []
+                    {
+                        new SlnMergeSettings.SolutionFolder() { FolderPath = "New Folder1", Guid = "{fb9c1fbb-0842-45bc-897f-6909c9813f1f}" },
+                    },
+                    NestedProjects = new []
+                    {
+                        new SlnMergeSettings.NestedProject() { FolderPath = "New Folder1", ProjectName = "ProjectDoesNotExist" },
+                    }
+                },
+                SlnMergeNullLogger.Instance);
+            var content = mergedSolutionFile.ToFileContent();
+            var folderGuid = mergedSolutionFile.Projects.Values.First(x => x.IsFolder).Guid;
+            Assert.Equal((@"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""New Folder1"", ""New Folder1"", """ + folderGuid + @"""
+EndProject
+Global
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal
+").Trim(), content.Trim());
+        }
+
+        [Fact]
+        public void Merge_SolutionFolder_NewFolder_ProjectDoesNotExist_AsException()
+        {
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Global
+EndGlobal
+".Trim());
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+Global
+EndGlobal
+".Trim());
+            Assert.Throws<Exception>(() =>
+            {
+                var mergedSolutionFile = SlnMerge.Merge(
+                    baseSln,
+                    overlaySln,
+                    new SlnMergeSettings()
+                    {
+                        SolutionFolders = new []
+                        {
+                            new SlnMergeSettings.SolutionFolder() { FolderPath = "New Folder1", Guid = "{fb9c1fbb-0842-45bc-897f-6909c9813f1f}" },
+                        },
+                        NestedProjects = new []
+                        {
+                            new SlnMergeSettings.NestedProject() { FolderPath = "New Folder1", ProjectName = "ProjectDoesNotExist" },
+                        },
+                        ProjectMergeBehavior = ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist,
+                    },
+                    SlnMergeNullLogger.Instance);
+                var content = mergedSolutionFile.ToFileContent();
+                var folderGuid = mergedSolutionFile.Projects.Values.First(x => x.IsFolder).Guid;
+                Assert.Equal((@"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""New Folder1"", ""New Folder1"", """ + folderGuid + @"""
+EndProject
+Global
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal
+").Trim(), content.Trim());
+            });
+        }
+
+        [Fact]
+        public void Merge_SolutionFolder_NewFolder_NotExistsInDefinition_ThrowException()
+        {
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Global
+EndGlobal
+".Trim());
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+Global
+EndGlobal
+".Trim());
+
+            Assert.Throws<Exception>(() =>
             {
                 var mergedSolutionFile = SlnMerge.Merge(
                     baseSln,
@@ -236,16 +334,11 @@ EndGlobal
                     {
                         NestedProjects = new[]
                         {
-                            new SlnMergeSettings.NestedProject() { FolderPath = "New Folder1", ProjectName = "Assembly-CSharp" },
+                            new SlnMergeSettings.NestedProject() {FolderPath = "New Folder1", ProjectName = "Assembly-CSharp"},
                         }
                     },
                     SlnMergeNullLogger.Instance);
-
-            }
-            catch (Exception e)
-            {
-                Assert.NotNull(e);
-            }
+            });
         }
 
 
