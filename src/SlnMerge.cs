@@ -93,7 +93,7 @@ namespace SlnMerge.Unity
 
             public void Error(string message, Exception ex)
             {
-                UnityEngine.Debug.LogError(message);
+                UnityEngine.Debug.LogError($"[SlnMerge] {message}");
                 if (ex != null)
                 {
                     UnityEngine.Debug.LogException(ex);
@@ -102,13 +102,13 @@ namespace SlnMerge.Unity
 
             public void Information(string message)
             {
-                UnityEngine.Debug.Log(message);
+                UnityEngine.Debug.Log($"[SlnMerge] {message}");
             }
 
             public void Debug(string message)
             {
 #if SLNMERGE_DEBUG
-                UnityEngine.Debug.Log(message);
+                UnityEngine.Debug.Log($"[SlnMerge] {message}");
 #endif
             }
         }
@@ -134,6 +134,7 @@ namespace SlnMerge
         public SolutionFolder[] SolutionFolders { get; set; }
         public NestedProject[] NestedProjects { get; set; }
         public ProjectConflictResolution ProjectConflictResolution { get; set; }
+        public ProjectMergeBehavior ProjectMergeBehavior { get; set;  }
 
         public string MergeTargetSolution { get; set; }
 
@@ -182,6 +183,17 @@ namespace SlnMerge
         /// Preserve Overlay original project.
         /// </summary>
         PreserveOverlay,
+    }
+
+    [Flags]
+    public enum ProjectMergeBehavior
+    {
+        None,
+
+        /// <summary>
+        /// Throw an exception if the project or solution foler does not exist.
+        /// </summary>
+        ErrorIfProjectOrFolderDoesNotExist = 1 << 0,
     }
 
     public static class SlnMerge
@@ -448,19 +460,39 @@ namespace SlnMerge
                 // Verify GUIDs / Paths
                 if (nestedProjectGuid == null)
                 {
-                    throw new Exception($"Project '{nestedProject.ProjectName}' does not exists in the solution.");
+                    if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
+                    {
+                        throw new Exception($"Project '{nestedProject.ProjectName}' does not exists in the solution.");
+                    }
+                    ctx.Logger.Warn($"Project '{nestedProject.ProjectName}' does not exists in the solution.");
+                    continue;
                 }
                 if (nestedProjectFolderGuid == null)
                 {
-                    throw new Exception($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
+                    {
+                        throw new Exception($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    }
+                    ctx.Logger.Warn($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    continue;
                 }
                 if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectGuid))
                 {
-                    throw new Exception($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
+                    {
+                        throw new Exception($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    }
+                    ctx.Logger.Warn($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    continue;
                 }
                 if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectFolderGuid))
                 {
-                    throw new Exception($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
+                    {
+                        throw new Exception($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    }
+                    ctx.Logger.Warn($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                    continue;
                 }
 
                 nestedProjects.Add(nestedProjectGuid, nestedProjectFolderGuid);
