@@ -36,8 +36,12 @@ mergesettings ファイルには次の設定項目があります。
     - `NestedProject/FolderPath`: ソリューション上のフォルダーパス (存在しない場合は生成。GUIDと排他)
     - `NestedProject/FolderGuid`: ソリューション上のフォルダーのGUID (パスと排他)
     - `NestedProject/ProjectName`: プロジェクト名 (GUIDと排他)
+        - ワイルドカードが使用可能です (`?`, `*`)
     - `NestedProject/ProjectGuid`: プロジェクトGUID (プロジェクト名と排他)
-- `ProjectConflictResolution`: 同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
+- `ProjectConflictResolution`: マージ元とマージ先でソリューション内に同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
+    - `PreserveAll`: すべてのプロジェクトを残します (Unity とマージ対象のソリューションのプロジェクトの両方)
+    - `PreserveUnity`: Unity が生成したソリューションのプロジェクトを残します (マージ対象のソリューションのプロジェクトを破棄)
+    - `PreserveOverlay`: 上書きするソリューションのプロジェクトを残します (Unity が生成したソリューションのプロジェクトを破棄)
 
 ### ソリューションフォルダーに追加する
 `NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。ベースのソリューションにソリューションフォルダーが存在しない場合には自動で追加しますが、ソリューションフォルダーの定義が設定ファイルに必要です。
@@ -55,6 +59,18 @@ mergesettings ファイルには次の設定項目があります。
     </NestedProjects>
 </SlnMergeSettings>
 ```
+
+## トラブルシューティング
+### 常にソリューションファイルが再生成され、Visual Studioに競合ダイアログが表示される
+1. Unity Editor を閉じる
+2. Unity Editor が生成した .csproj と .sln を削除する
+3. プロジェクトを Unity Editor で開きなおす
+
+マージ対象のプロジェクトと Unity が生成するソリューションで同名のプロジェクトが存在する場合、`ProjectConflictResolution` オプションを使用して3つの方法でコンフリクトを解決できます。
+
+- すべてのプロジェクトを維持 (デフォルト)
+- マージ対象のソリューションのプロジェクトを維持
+- Unity が生成したソリューションのプロジェクトを維持
 
 ## ライセンス
 MIT License

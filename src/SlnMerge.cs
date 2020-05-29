@@ -373,23 +373,24 @@ namespace SlnMerge
             var nestedProjects = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var nestedProject in ctx.Settings.NestedProjects)
             {
-                var nestedProjectGuid = default(string);
+                IEnumerable<string> nestedProjectGuids;
                 var nestedProjectFolderGuid = default(string);
 
                 // Find a target project
                 if (string.IsNullOrEmpty(nestedProject.ProjectName))
                 {
                     // by GUID
-                    nestedProjectGuid = nestedProject.ProjectGuid;
+                    nestedProjectGuids = new[] {nestedProject.ProjectGuid};
                 }
                 else
                 {
                     // by Name
-                    var proj = ctx.MergedSolutionFile.Projects.Values.FirstOrDefault(x => x.Name == nestedProject.ProjectName);
-                    if (proj != null)
-                    {
-                        nestedProjectGuid = proj.Guid;
-                    }
+                    var nestedProjectNamePattern = new Regex(
+                        "^" + Regex.Escape(nestedProject.ProjectName)
+                            .Replace(@"\*", ".*").Replace(@"\?", ".") + "$");
+                    nestedProjectGuids = ctx.MergedSolutionFile.Projects.Values
+                        .Where(x => nestedProjectNamePattern.IsMatch(x.Name))
+                        .Select(x => x.Guid);
                 }
 
                 // Find a solution folder
@@ -458,7 +459,7 @@ namespace SlnMerge
                 }
 
                 // Verify GUIDs / Paths
-                if (nestedProjectGuid == null)
+                if (!nestedProjectGuids.Any())
                 {
                     if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
                     {
@@ -476,15 +477,6 @@ namespace SlnMerge
                     ctx.Logger.Warn($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
                     continue;
                 }
-                if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectGuid))
-                {
-                    if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
-                    {
-                        throw new Exception($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
-                    }
-                    ctx.Logger.Warn($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
-                    continue;
-                }
                 if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectFolderGuid))
                 {
                     if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
@@ -494,8 +486,19 @@ namespace SlnMerge
                     ctx.Logger.Warn($"Solution Folder '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
                     continue;
                 }
-
-                nestedProjects.Add(nestedProjectGuid, nestedProjectFolderGuid);
+                foreach (var nestedProjectGuid in nestedProjectGuids)
+                {
+                    if (!ctx.MergedSolutionFile.Projects.ContainsKey(nestedProjectGuid))
+                    {
+                        if (ctx.Settings.ProjectMergeBehavior.HasFlag(ProjectMergeBehavior.ErrorIfProjectOrFolderDoesNotExist))
+                        {
+                            throw new Exception($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                        }
+                        ctx.Logger.Warn($"Project '{nestedProject.FolderGuid}' (GUID) does not exists in the solution.");
+                        continue;
+                    }
+                    nestedProjects.Add(nestedProjectGuid, nestedProjectFolderGuid);
+                }
             }
 
             // Add nested projects.
