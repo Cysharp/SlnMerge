@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace SlnMerge.Tests
@@ -10,12 +11,12 @@ namespace SlnMerge.Tests
         [Fact]
         public void Merge_AdjustProjectRelativePath()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""Nantoka.Server.csproj"", ""{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}""
 EndProject
@@ -33,18 +34,18 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void Merge_AdjustProjectRelativePath_2()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""Nantoka.Server\Nantoka.Server.csproj"", ""{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}""
 EndProject
@@ -62,13 +63,15 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
 
-        [Fact]
+        [SkippableFact]
         public void Merge_AdjustProjectRelativePath_3()
         {
+            Skip.If(Environment.OSVersion.Platform != PlatformID.Win32NT);
+
             var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
@@ -83,13 +86,13 @@ EndGlobal
 ".Trim());
 
             var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
-            Assert.Equal(@"D:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.csproj".Replace('\\', Path.DirectorySeparatorChar), mergedSolutionFile.Projects.First().Value.Path);
+            Assert.Equal(@"D:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.csproj", mergedSolutionFile.Projects.First().Value.Path);
         }
 
         [Fact]
         public void Merge_TrivialLines()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -97,7 +100,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -119,14 +122,14 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
 
         [Fact]
         public void Merge_TrivialLines_Tail()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -134,7 +137,7 @@ EndProject
 Global
 EndGlobal
 ".Trim() + "\r\n");
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -156,14 +159,14 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim() + "\r\n", content.Trim() + "\r\n");
+".Trim().ReplacePathSeparators() + "\r\n", content.Trim() + "\r\n");
         }
 
 
         [Fact]
         public void Merge_SolutionFolder_NewFolder()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -171,7 +174,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
@@ -206,13 +209,13 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = " + folderGuid + @"
 	EndGlobalSection
 EndGlobal
-").Trim(), content.Trim());
+").Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void Merge_SolutionFolder_NewFolder_ProjectDoesNotExist_Warning()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -220,7 +223,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
@@ -254,13 +257,13 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
-").Trim(), content.Trim());
+").Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void Merge_SolutionFolder_NewFolder_ProjectDoesNotExist_AsException()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -268,7 +271,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
@@ -304,14 +307,14 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
-").Trim(), content.Trim());
+").Trim().ReplacePathSeparators(), content.Trim());
             });
         }
 
         [Fact]
         public void Merge_SolutionFolder_NewFolder_NotExistsInDefinition_ThrowException()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -319,7 +322,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
@@ -345,7 +348,7 @@ EndGlobal
         [Fact]
         public void Merge_SolutionFolder_ExistedFolder()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -353,7 +356,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Folder1"", ""Folder1"", ""{F95BC0CF-E609-419F-B0A0-019BD5783670}""
 EndProject
@@ -385,14 +388,14 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
 	EndGlobalSection
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
 
         [Fact]
         public void Merge_SolutionFolder_ExistedFolder_SectionExists()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -400,7 +403,7 @@ EndProject
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""Nantoka.Server\Nantoka.Server.csproj"", ""{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}""
 EndProject
@@ -440,19 +443,19 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
 	EndGlobalSection
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void Merge_SolutionItems()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -482,13 +485,13 @@ Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Pr
 EndProject
 Global
 EndGlobal
-").Trim(), content.Trim());
+").Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void TestMerge()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -518,7 +521,7 @@ Global
 	EndGlobalSection
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -527,7 +530,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""Nant
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -563,7 +566,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -595,13 +598,13 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void TestMerge_SameName_PreserveAll()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -637,7 +640,7 @@ Global
 	EndGlobalSection
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -692,7 +695,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Shared"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -732,13 +735,13 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
         [Fact]
         public void TestMerge_SameName_PreserveUnity()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -774,7 +777,7 @@ Global
 	EndGlobalSection
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -827,7 +830,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -867,14 +870,14 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
 
 
         [Fact]
         public void TestMerge_SameName_PreserveOverlay()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -910,7 +913,7 @@ Global
 	EndGlobalSection
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -963,7 +966,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -1003,13 +1006,13 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim());
         }
         
         [Fact]
         public void TestMerge_Wildcard()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 16
 Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
@@ -1039,7 +1042,7 @@ Global
 	EndGlobalSection
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29509.3
@@ -1099,7 +1102,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""New Folder1"", ""New Folder1"", """ + folderGuid + @"""
@@ -1137,9 +1140,26 @@ Global
 		{A94A546A-4413-A73D-F517-3C1A7CCFE662} = " + folderGuid + @"
 	EndGlobalSection
 EndGlobal
-").Trim(), content.Trim());
+").Trim().ReplacePathSeparators(), content.Trim());
         }
 
+    }
+
+    static class PlatformExtensions
+    {
+        public static string ReplacePathSeparators(this string value)
+        {
+            if (Path.DirectorySeparatorChar == '\\') return value; // on Windows: no-op
+
+            return value.Replace('\\', '/');
+        }
+
+        public static string ToCurrentPlatformPathForm(this string path)
+        {
+            if (Path.DirectorySeparatorChar == '\\') return path; // on Windows: no-op
+
+            return Regex.Replace(path, "^([a-zA-Z]):", "/mnt/$1").Replace('\\', '/');
+        }
     }
 
     class SlnMergeNullLogger : ISlnMergeLogger
