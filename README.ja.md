@@ -11,8 +11,19 @@ Unity とは別にサーバーサイドの C# プロジェクトおよびソリ�
 - Microsoft Visual Studio 2019
 - JetBrains Rider 2019.2
 
-## インストール
-### 1. Unity プロジェクトの `Assets/Editor` 配下に `src/SlnMerge.cs` をコピーする
+## 使い方
+### 1. SlnMerge をインストールする
+#### 方法 1. Unity プロジェクトの `Assets/Editor` 配下に `src/Editor/SlnMerge.cs` をコピーする
+リポジトリをクローンしてファイルをコピーします。
+
+#### 方法 2. Package Manager からパッケージとして追加する
+Unity 2019.1 以降のバージョンを利用している場合、Package Manager を使用して git リポジトリからパッケージをインストールできます。
+
+![](docs/images/SlnMerge-Image-02.png)
+
+```
+https://github.com/Cysharp/SlnMerge.git?path=src
+```
 
 ### 2. `プロジェクト名.sln.mergesettings` ファイルでマージしたいソリューションを指定する
 Unity によって生成されるソリューションファイル名に .mergesettings をつけた名前の設定ファイルを用意します。

@@ -12,7 +12,19 @@ SlnMerge merges the solutions when creating solution file by Unity Editor.
 - JetBrains Rider 2019.2
 
 ## How to use
-### 1. Copy `src/SlnMerge.cs` to `Assets/Editor` in your Unity project.
+
+### 1. Install SlnMerge
+#### Method 1. Copy `src/Editor/SlnMerge.cs` to `Assets/Editor` in your Unity project.
+Clone this repository and copy those files.
+
+#### Method 2. Add the package via git from Package Manager
+If you are using Unity 2019.1 or later, you can use Package Manager to install a package via git.
+
+![](docs/images/SlnMerge-Image-02.png)
+
+```
+https://github.com/Cysharp/SlnMerge.git?path=src
+```
 
 ### 2. Create `ProjectName.sln.mergesettings` and configure a target solution.
 Create a setting XML file named `<ProjectName>.sln.mergesettings`.
