@@ -527,7 +527,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""Nant
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -563,7 +563,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -692,7 +692,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Shared"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -827,7 +827,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -963,7 +963,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Global
@@ -1099,7 +1099,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
 	EndProjectSection
 EndProject
 Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""New Folder1"", ""New Folder1"", """ + folderGuid + @"""
