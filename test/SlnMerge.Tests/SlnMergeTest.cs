@@ -67,15 +67,17 @@ EndGlobal
         }
 
 
-        [Fact]
+        [SkippableFact]
         public void Merge_AdjustProjectRelativePath_3()
         {
-            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
+            Skip.If(Environment.OSVersion.Platform != PlatformID.Win32NT);
+
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Global
 EndGlobal
 ".Trim());
-            var overlaySln = SolutionFile.Parse(@"D:\Path\To\Nantoka\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
+            var overlaySln = SolutionFile.Parse(@"D:\Path\To\Nantoka\Nantoka.Server.sln", @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""Nantoka.Server\Nantoka.Server.csproj"", ""{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}""
 EndProject
@@ -84,7 +86,7 @@ EndGlobal
 ".Trim());
 
             var mergedSolutionFile = SlnMerge.Merge(baseSln, overlaySln, new SlnMergeSettings(), SlnMergeNullLogger.Instance);
-            Assert.Equal(@"D:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.csproj".ToCurrentPlatformPathForm(), mergedSolutionFile.Projects.First().Value.Path);
+            Assert.Equal(@"D:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.csproj", mergedSolutionFile.Projects.First().Value.Path);
         }
 
         [Fact]
