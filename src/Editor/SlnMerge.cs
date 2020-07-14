@@ -320,7 +320,21 @@ namespace SlnMerge
                         }
                     }
 
-                    if (!project.Value.IsFolder)
+                    if (project.Value.IsFolder)
+                    {
+                        // If the project is a folder and it contains solution items, we adjust the path of solution items.
+                        if (project.Value.Sections.TryGetValue(("SolutionItems", "preProject"), out var solutionItems))
+                        {
+                            foreach (var solutionItem in solutionItems.Values.ToArray())
+                            {
+                                solutionItems.Values.Remove(solutionItem.Key);
+                                var solutionItemPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), solutionItem.Key));
+                                var solutionItemPathRelative = MakeRelative(ctx.MergedSolutionFile.Path, solutionItemPathAbsolute);
+                                solutionItems.Values[solutionItemPathRelative] = solutionItemPathRelative;
+                            }
+                        }
+                    }
+                    else
                     {
                         var overlayProjectPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), project.Value.Path));
                         project.Value.Path = MakeRelative(ctx.MergedSolutionFile.Path, overlayProjectPathAbsolute);

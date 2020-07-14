@@ -444,6 +444,48 @@ EndGlobal
         }
 
         [Fact]
+        public void Merge_SolutionItems()
+        {
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Global
+EndGlobal
+".Trim());
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Server\Nantoka.Server.sln", @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29509.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Global
+EndGlobal
+".Trim());
+
+            var mergedSolutionFile = SlnMerge.Merge(
+                baseSln,
+                overlaySln,
+                new SlnMergeSettings(),
+                SlnMergeNullLogger.Instance);
+            var content = mergedSolutionFile.ToFileContent();
+            Assert.Equal((@"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Project Settings"", ""{34006C71-946B-49BF-BBCB-BB091E5A3AE7}""
+	ProjectSection(SolutionItems) = preProject
+		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
+	EndProjectSection
+EndProject
+Global
+EndGlobal
+").Trim(), content.Trim());
+        }
+
+        [Fact]
         public void TestMerge()
         {
             var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln", @"
