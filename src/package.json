@@ -2,7 +2,7 @@
     "name": "com.cysharp.slnmerge",
     "displayName": "SlnMerge",
     "author": { "name": "Cysharp, Inc.", "url": "https://cysharp.co.jp/en/" },
-    "version": "1.1.0",
+    "version": "1.2.0",
     "unity": "2018.4",
     "description": "SlnMerge merges the solution files when generating solution file by Unity Editor.",
     "keywords": ["Visual Studio", "sln", "IDE", "solution"],
