@@ -1,3 +1,5 @@
+[![GitHub Actions](https://github.com/Cysharp/SlnMerge/workflows/Build-Debug/badge.svg)](https://github.com/Cysharp/SlnMerge/actions) [![Releases](https://img.shields.io/github/release/Cysharp/SlnMerge.svg)](https://github.com/Cysharp/SlnMerge/releases)
+
 # SlnMerge
 
 SlnMerge merges the solutions when creating solution file by Unity Editor.
@@ -5,6 +7,24 @@ SlnMerge merges the solutions when creating solution file by Unity Editor.
 [日本語](README.ja.md)
 
 ![](docs/images/SlnMerge-Image-01.png)
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Works with](#works-with)
+- [How to use](#how-to-use)
+  - [1. Install SlnMerge](#1-install-slnmerge)
+    - [Method 1. Copy `src/Editor/SlnMerge.cs` to `Assets/Editor` in your Unity project.](#method-1-copy-srceditorslnmergecs-to-assetseditor-in-your-unity-project)
+    - [Method 2. Add the package via git from Package Manager](#method-2-add-the-package-via-git-from-package-manager)
+  - [2. Create `ProjectName.sln.mergesettings` and configure a target solution.](#2-create-projectnameslnmergesettings-and-configure-a-target-solution)
+- [Settings](#settings)
+  - [Add projects to solution folders](#add-projects-to-solution-folders)
+- [Troubleshooting](#troubleshooting)
+  - [Always regenerate the solution file, and Visual Studio displays a conflict dialog.](#always-regenerate-the-solution-file-and-visual-studio-displays-a-conflict-dialog)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Works with
 - Unity 2018.4.5f1 + Windows 10 and macOS 10.15
