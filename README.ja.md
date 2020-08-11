@@ -1,3 +1,13 @@
+[![GitHub Actions](https://github.com/Cysharp/SlnMerge/workflows/Build-Debug/badge.svg)](https://github.com/Cysharp/SlnMerge/actions) [![Releases](https://img.shields.io/github/release/Cysharp/SlnMerge.svg)](https://github.com/Cysharp/SlnMerge/releases)
+
+# SlnMerge
+
+Unity でソリューションファイル生成時に指定したソリューションをマージするエディタ拡張です。
+
+Unity とは別にサーバーサイドの C# プロジェクトおよびソリューションがあるようなケースで、Unity のソリューションで同時に開くことができるようになります。
+
+![](docs/images/SlnMerge-Image-01.png)
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 ## Table of Contents
@@ -16,14 +26,6 @@
   - [ライセンス](#%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# SlnMerge
-
-Unity でソリューションファイル生成時に指定したソリューションをマージするエディタ拡張です。
-
-Unity とは別にサーバーサイドの C# プロジェクトおよびソリューションがあるようなケースで、Unity のソリューションで同時に開くことができるようになります。
-
-![](docs/images/SlnMerge-Image-01.png)
 
 ## 動作確認環境
 - Unity 2018.4.5f1 + Windows 10 & macOS 10.15
