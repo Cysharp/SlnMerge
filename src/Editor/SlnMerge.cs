@@ -541,6 +541,12 @@ namespace SlnMerge
 
                     if (!projectsByGuid.ContainsKey(projectGuid))
                     {
+                        // Project has been removed from the base solution.
+                        if (!solutionFile.Projects.ContainsKey(projectGuid))
+                        {
+                            continue;
+                        }
+
                         projectsByGuid[projectGuid] = new SolutionTreeNode(solutionFile.Projects[projectGuid]);
                     }
 

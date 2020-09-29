@@ -447,6 +447,58 @@ EndGlobal
         }
 
         [Fact]
+        public void Merge_SolutionFolder_ProjectHasBeenRemovedFromBaseSolution()
+        {
+            var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Global
+	GlobalSection(NestedProjects) = preSolution
+		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
+		{1E7138DC-D3E2-51A8-4059-67524470B2E8} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
+	EndGlobalSection
+EndGlobal
+".Trim());
+            var overlaySln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Server.sln".ToCurrentPlatformPathForm(), @"
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Folder1"", ""Folder1"", ""{F95BC0CF-E609-419F-B0A0-019BD5783670}""
+EndProject
+Global
+EndGlobal
+".Trim());
+
+            // Merge without errors. NestedProject of removed projects remain in a merged solution.
+            var mergedSolutionFile = SlnMerge.Merge(
+                baseSln,
+                overlaySln,
+                new SlnMergeSettings()
+                {
+                    NestedProjects = new[]
+                    {
+                        new SlnMergeSettings.NestedProject() { FolderPath = "Folder1", ProjectName = "Assembly-CSharp" },
+                    }
+                },
+                SlnMergeNullLogger.Instance);
+            var content = mergedSolutionFile.ToFileContent();
+            Assert.Equal(@"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 16
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""Assembly-CSharp"", ""Assembly-CSharp.csproj"", ""{1E7138DC-D3E2-51A8-4059-67524470B2E7}""
+EndProject
+Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Folder1"", ""Folder1"", ""{F95BC0CF-E609-419F-B0A0-019BD5783670}""
+EndProject
+Global
+	GlobalSection(NestedProjects) = preSolution
+		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
+		{1E7138DC-D3E2-51A8-4059-67524470B2E8} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
+	EndGlobalSection
+EndGlobal
+".Trim().ReplacePathSeparators(), content.Trim());
+        }
+
+        [Fact]
         public void Merge_SolutionItems()
         {
             var baseSln = SolutionFile.Parse(@"C:\Path\To\Nantoka\Nantoka.Unity\Nantoka.Unity.sln".ToCurrentPlatformPathForm(), @"
