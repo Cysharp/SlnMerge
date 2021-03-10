@@ -82,8 +82,8 @@ mergesettings ファイルには次の設定項目があります。
     <MergeTargetSolution>..\ChatApp.Server.sln</MergeTargetSolution>
     <SolutionFolders>
         <!-- Unity という名前のソリューションフォルダーを GUID とともに定義する -->
-        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}">
-    </SolutionFolder>
+        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}"/>
+    </SolutionFolders>
     <NestedProjects>
         <NestedProject ProjectName="Assembly-CSharp" FolderPath="Unity" />
         <NestedProject ProjectName="Assembly-CSharp-Editor" FolderPath="Unity" />

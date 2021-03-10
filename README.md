@@ -87,8 +87,8 @@ When a solution folder doesn't exist, SlnMerge will add the solution folder to t
     <MergeTargetSolution>..\ChatApp.Server.sln</MergeTargetSolution>
     <SolutionFolders>
         <!-- Define a solution folder named 'Unity' with GUID -->
-        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}">
-    </SolutionFolder>
+        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}"/>
+    </SolutionFolders>
     <NestedProjects>
         <NestedProject ProjectName="Assembly-CSharp" FolderPath="Unity" />
         <NestedProject ProjectName="Assembly-CSharp-Editor" FolderPath="Unity" />
