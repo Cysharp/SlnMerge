@@ -1197,7 +1197,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim().ReplacePathSeparators());
         }
 
 
@@ -1337,7 +1337,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators(), content.Trim().ReplacePathSeparators());
         }
 
         [Fact]

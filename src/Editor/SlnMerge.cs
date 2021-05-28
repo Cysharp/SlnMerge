@@ -346,7 +346,7 @@ namespace SlnMerge
                 }
                 else
                 {
-                    // A project already exists. Deduplication if needed.
+                    // A overlay project already exists. Deduplication if needed.
                     var sameNameProjects = ctx.MergedSolutionFile.Projects.Where(x => x.Value.Name == project.Value.Name).ToArray();
                     if (sameNameProjects.Length > 1)
                     {
