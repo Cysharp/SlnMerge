@@ -1,4 +1,4 @@
-﻿// Copyright © Cysharp, Inc. All rights reserved.
+// Copyright © Cysharp, Inc. All rights reserved.
 // This source code is licensed under the MIT License. See details at https://github.com/Cysharp/SlnMerge.
 
 // ReSharper disable All
@@ -134,7 +134,7 @@ namespace SlnMerge
         public SolutionFolder[] SolutionFolders { get; set; }
         public NestedProject[] NestedProjects { get; set; }
         public ProjectConflictResolution ProjectConflictResolution { get; set; }
-        public ProjectMergeBehavior ProjectMergeBehavior { get; set;  }
+        public ProjectMergeBehavior ProjectMergeBehavior { get; set; }
 
         public string MergeTargetSolution { get; set; }
 
@@ -303,6 +303,8 @@ namespace SlnMerge
                     // If a solution contains a project that has same name, resolve conflict by resolution strategy.
                     if (ctx.MergedSolutionFile.Projects.Any(x => x.Value.Name == project.Value.Name))
                     {
+                        ctx.Logger.Debug($"Project Conflict: Overlay={project.Value.Name} [{project.Key}; ProjectConflictResolution={ctx.Settings.ProjectConflictResolution}\nMergedSolutionFile.Projects:\n{string.Join("\n", ctx.MergedSolutionFile.Projects.Select(x => $"{x.Value.Name} [{x.Key}]"))}");
+
                         if (ctx.Settings.ProjectConflictResolution == ProjectConflictResolution.PreserveUnity)
                         {
                             // Ignore Overlay's project
@@ -313,6 +315,7 @@ namespace SlnMerge
                             // Remove Unity generated project
                             var duplicatedProject = ctx.MergedSolutionFile.Projects.First(x => x.Value.Name == project.Value.Name);
                             ctx.MergedSolutionFile.Projects.Remove(duplicatedProject.Key);
+                            ctx.Logger.Debug($"Remove duplicated project '{duplicatedProject.Value.Name} [{duplicatedProject.Key}; Path={duplicatedProject.Value.Path}]' (PreserveOverlay)");
                         }
                         else
                         {
@@ -343,7 +346,31 @@ namespace SlnMerge
                 }
                 else
                 {
-                    // A project already exists.
+                    // A overlay project already exists. Deduplication if needed.
+                    var sameNameProjects = ctx.MergedSolutionFile.Projects.Where(x => x.Value.Name == project.Value.Name).ToArray();
+                    if (sameNameProjects.Length > 1)
+                    {
+                        ctx.Logger.Debug($"Duplicated project was detected: Overlay={project.Value.Name} [{project.Key}; ProjectConflictResolution={ctx.Settings.ProjectConflictResolution}\nProjects:\n{string.Join("\n", sameNameProjects.Select(x => $"{x.Value.Name} [{x.Key}]"))}");
+
+                        var removeKey = default(string);
+                        if (ctx.Settings.ProjectConflictResolution == ProjectConflictResolution.PreserveUnity)
+                        {
+                            // Remove a project in the overlay from the solution.
+                            removeKey = project.Key;
+                        }
+                        else if (ctx.Settings.ProjectConflictResolution == ProjectConflictResolution.PreserveOverlay)
+                        {
+                            // Remove a Unity generated project from the solution.
+                            removeKey = sameNameProjects.Single(x => x.Key != project.Key).Key;
+                        }
+
+                        if (removeKey != null)
+                        {
+                            var duplicatedProject = ctx.MergedSolutionFile.Projects[removeKey];
+                            ctx.MergedSolutionFile.Projects.Remove(removeKey);
+                            ctx.Logger.Debug($"Remove duplicated project '{duplicatedProject.Name} [{duplicatedProject.Guid}; Path={duplicatedProject.Path}]'");
+                        }
+                    }
                 }
             }
         }
@@ -394,7 +421,7 @@ namespace SlnMerge
                 if (string.IsNullOrEmpty(nestedProject.ProjectName))
                 {
                     // by GUID
-                    nestedProjectGuids = new[] {nestedProject.ProjectGuid};
+                    nestedProjectGuids = new[] { nestedProject.ProjectGuid };
                 }
                 else
                 {
