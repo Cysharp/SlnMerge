@@ -506,7 +506,10 @@ namespace SlnMerge
                     {
                         throw new Exception($"Project '{nestedProject.ProjectName}' does not exists in the solution.");
                     }
-                    ctx.Logger.Warn($"Project '{nestedProject.ProjectName}' does not exists in the solution.");
+
+                    // The Unity generated solution may not contain `.csproj` for packages.
+                    // We should not log this as a warning.
+                    ctx.Logger.Debug($"Project '{nestedProject.ProjectName}' does not exists in the solution.");
                     continue;
                 }
                 if (nestedProjectFolderGuid == null)
