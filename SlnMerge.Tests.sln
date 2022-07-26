@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29509.3
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SlnMerge.Tests", "SlnMerge.Tests.csproj", "{367C5010-D04E-466F-AE70-8D56CC13AD2F}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D64138DA-9A70-4347-960F-71F7272DDCFD}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\.github\workflows\build-test.yml = ..\..\.github\workflows\build-test.yml
+		.github\workflows\build-test.yml = .github\workflows\build-test.yml
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SlnMerge.Tests", "test\SlnMerge.Tests\SlnMerge.Tests.csproj", "{1A8620AC-20FD-43C8-9760-8E75AF512876}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,10 +16,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{367C5010-D04E-466F-AE70-8D56CC13AD2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{367C5010-D04E-466F-AE70-8D56CC13AD2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{367C5010-D04E-466F-AE70-8D56CC13AD2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{367C5010-D04E-466F-AE70-8D56CC13AD2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A8620AC-20FD-43C8-9760-8E75AF512876}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A8620AC-20FD-43C8-9760-8E75AF512876}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A8620AC-20FD-43C8-9760-8E75AF512876}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A8620AC-20FD-43C8-9760-8E75AF512876}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
