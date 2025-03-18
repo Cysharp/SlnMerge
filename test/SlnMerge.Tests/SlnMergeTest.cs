@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -34,7 +34,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -63,7 +63,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
 
@@ -122,7 +122,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
 
@@ -159,7 +159,7 @@ Project(""{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"") = ""Nantoka.Server"", ""..\N
 EndProject
 Global
 EndGlobal
-".Trim().ReplacePathSeparators() + "\r\n", content.Trim() + "\r\n");
+".Trim().ReplacePathSeparators().ReplaceLineEndings() + Environment.NewLine, content.Trim() + Environment.NewLine);
         }
 
 
@@ -209,7 +209,7 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = " + folderGuid + @"
 	EndGlobalSection
 EndGlobal
-").Trim().ReplacePathSeparators(), content.Trim());
+").Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -257,7 +257,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
-").Trim().ReplacePathSeparators(), content.Trim());
+").Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -307,7 +307,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
-").Trim().ReplacePathSeparators(), content.Trim());
+").Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
             });
         }
 
@@ -388,7 +388,7 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
 
@@ -443,7 +443,7 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E7} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -495,7 +495,7 @@ Global
 		{1E7138DC-D3E2-51A8-4059-67524470B2E8} = {F95BC0CF-E609-419F-B0A0-019BD5783670}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -537,7 +537,7 @@ Project(""{2150E333-8FDC-42A3-9474-1A3956D46DE8}"") = ""Project Settings"", ""Pr
 EndProject
 Global
 EndGlobal
-").Trim().ReplacePathSeparators(), content.Trim());
+").Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -650,7 +650,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -787,7 +787,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -922,7 +922,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
 
@@ -1058,7 +1058,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
         [Fact]
@@ -1197,7 +1197,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim().ReplacePathSeparators());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim().ReplacePathSeparators());
         }
 
 
@@ -1337,7 +1337,7 @@ Global
 		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
 	EndGlobalSection
 EndGlobal
-".Trim().ReplacePathSeparators(), content.Trim().ReplacePathSeparators());
+".Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim().ReplacePathSeparators());
         }
 
         [Fact]
@@ -1471,7 +1471,7 @@ Global
 		{A94A546A-4413-A73D-F517-3C1A7CCFE662} = " + folderGuid + @"
 	EndGlobalSection
 EndGlobal
-").Trim().ReplacePathSeparators(), content.Trim());
+").Trim().ReplacePathSeparators().ReplaceLineEndings(), content.Trim());
         }
 
     }
