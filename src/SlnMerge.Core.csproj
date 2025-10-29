@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>9</LangVersion>
     <UseArtifactsOutput>true</UseArtifactsOutput>
+    <RootNamespace>SlnMerge</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
