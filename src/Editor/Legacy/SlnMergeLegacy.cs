@@ -19,12 +19,12 @@ namespace SlnMerge.Legacy
     {
         internal const string GuidProjectTypeFolder = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
 
-        public static bool TryMerge(string solutionFilePath, ISlnMergeLogger logger, out string resultSolutionContent)
+        public static bool TryMerge(string solutionFilePath, ISlnMergeLogger logger, out string? resultSolutionContent)
         {
             return TryMerge(solutionFilePath, File.ReadAllText(solutionFilePath), logger, out resultSolutionContent);
         }
 
-        public static bool TryMerge(string solutionFilePath, string solutionFileContent, ISlnMergeLogger logger, out string resultSolutionContent)
+        public static bool TryMerge(string solutionFilePath, string solutionFileContent, ISlnMergeLogger logger, out string? resultSolutionContent)
         {
             logger.Debug(solutionFileContent);
             try
@@ -241,6 +241,10 @@ namespace SlnMerge.Legacy
                 if (string.IsNullOrEmpty(nestedProject.ProjectName))
                 {
                     // by GUID
+                    if (nestedProject.ProjectGuid == null)
+                    {
+                        throw new Exception($"Nested project '{nestedProject.ProjectName}' doesn't have a GUID or name.");
+                    }
                     nestedProjectGuids = new[] { nestedProject.ProjectGuid };
                 }
                 else
@@ -294,6 +298,10 @@ namespace SlnMerge.Legacy
                                 if (!definedSolutionFolders.TryGetValue(path, out var guid))
                                 {
                                     throw new Exception($"Path '{path}' doesn't exist in the Solution or Solution Folder definitions. To create a new folder, you need to define SolutionFolder in .mergesettings.");
+                                }
+                                if (guid == null)
+                                {
+                                    throw new Exception($"Folder Path '{path}' doesn't have GUID.");
                                 }
 
                                 var newFolder = new SolutionProject(ctx.MergedSolutionFile,
@@ -462,7 +470,7 @@ namespace SlnMerge.Legacy
         private class SolutionTreeNode
         {
             public List<SolutionTreeNode> Children { get; } = new List<SolutionTreeNode>();
-            public SolutionTreeNode Parent { get; set; }
+            public SolutionTreeNode? Parent { get; set; }
             public SolutionProject Project { get; }
             public bool IsFolder => Project.IsFolder;
 
@@ -479,7 +487,7 @@ namespace SlnMerge.Legacy
     internal class SolutionFile : SolutionDocumentNode
     {
         public Dictionary<string, SolutionProject> Projects { get; } = new Dictionary<string, SolutionProject>();
-        public SolutionGlobal Global { get; set; }
+        public SolutionGlobal Global { get; set; } = default!;
         public string Path { get; }
 
         public SolutionFile(string path) : base(null)
@@ -492,7 +500,7 @@ namespace SlnMerge.Legacy
             return (SolutionFile)Clone(null);
         }
 
-        public override SolutionDocumentNode Clone(SolutionDocumentNode newParent)
+        public override SolutionDocumentNode Clone(SolutionDocumentNode? newParent)
         {
             var newSolution = new SolutionFile(Path);
 
@@ -543,8 +551,7 @@ namespace SlnMerge.Legacy
                 {
                     case SlnDocLineType.ProjectBegin:
                         {
-                            if (!(current is SolutionFile)) throw new InvalidOperationException("Project must be located under Solution");
-                            var sln = current as SolutionFile;
+                            if (!(current is SolutionFile sln)) throw new InvalidOperationException("Project must be located under Solution");
                             var proj = new SolutionProject(current, parsedLine);
                             current = proj;
                             if (sln.Projects.ContainsKey(proj.Guid))
@@ -564,8 +571,7 @@ namespace SlnMerge.Legacy
                         break;
                     case SlnDocLineType.ProjectSectionBegin:
                         {
-                            if (!(current is SolutionProject)) throw new InvalidOperationException("ProjectSection must be located under Project");
-                            var proj = current as SolutionProject;
+                            if (!(current is SolutionProject proj)) throw new InvalidOperationException("ProjectSection must be located under Project");
                             var projSection = new SolutionProjectSection(current, parsedLine);
                             current = projSection;
                             if (proj.Sections.ContainsKey((projSection.Category, projSection.Value)))
@@ -578,8 +584,7 @@ namespace SlnMerge.Legacy
                         break;
                     case SlnDocLineType.GlobalBegin:
                         {
-                            if (!(current is SolutionFile)) throw new InvalidOperationException("Global must be located under Solution");
-                            var sln = current as SolutionFile;
+                            if (!(current is SolutionFile sln)) throw new InvalidOperationException("Global must be located under Solution");
                             sln.Global = new SolutionGlobal(current);
 
                             if (!isProjectMarkerAdded)
@@ -595,8 +600,7 @@ namespace SlnMerge.Legacy
                         break;
                     case SlnDocLineType.GlobalSectionBegin:
                         {
-                            if (!(current is SolutionGlobal)) throw new InvalidOperationException("GlobalSection must be located under Global");
-                            var global = current as SolutionGlobal;
+                            if (!(current is SolutionGlobal global)) throw new InvalidOperationException("GlobalSection must be located under Global");
                             var globalSection = new SolutionGlobalSection(current, parsedLine);
                             if (global.Sections.ContainsKey((globalSection.Category, globalSection.Value)))
                             {
@@ -611,7 +615,8 @@ namespace SlnMerge.Legacy
                     case SlnDocLineType.ProjectEnd:
                     case SlnDocLineType.ProjectSectionEnd:
                     case SlnDocLineType.GlobalSectionEnd:
-                        current = current.Parent;
+                        Debug.Assert(current != null && current.Parent != null);
+                        current = current!.Parent!;
                         break;
                     default:
                         current.AddChild(parsedLine);
@@ -775,10 +780,10 @@ namespace SlnMerge.Legacy
 
     internal abstract class SolutionDocumentNode
     {
-        public SolutionDocumentNode Parent { get; }
+        public SolutionDocumentNode? Parent { get; }
         public List<SolutionDocumentNode> Children { get; } = new List<SolutionDocumentNode>();
 
-        protected SolutionDocumentNode(SolutionDocumentNode parent)
+        protected SolutionDocumentNode(SolutionDocumentNode? parent)
         {
             Parent = parent;
         }
