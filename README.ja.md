@@ -27,17 +27,14 @@ Unity とは別にサーバーサイドの C# プロジェクトおよびソリ�
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## 動作確認環境
-- Unity 2018.4.5f1 + Windows 10 & macOS 10.15
-- Microsoft Visual Studio 2019
-- JetBrains Rider 2019.2
+- Unity 2022.3+
+- Windows 11 & macOS 10.15
+- Microsoft Visual Studio 2022/2026
+- JetBrains Rider 2025.x
 
 ## 使い方
 ### 1. SlnMerge をインストールする
-#### 方法 1. Unity プロジェクトの `Assets/Editor` 配下に `src/Editor/SlnMerge.cs` をコピーする
-リポジトリをクローンしてファイルをコピーします。
-
-#### 方法 2. Package Manager からパッケージとして追加する
-Unity 2019.1 以降のバージョンを利用している場合、Package Manager を使用して git リポジトリからパッケージをインストールできます。
+Package Manager を使用して git リポジトリからパッケージをインストールできます。
 
 ![](docs/images/SlnMerge-Image-02.png)
 
