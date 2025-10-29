@@ -3,8 +3,6 @@
 
 // ReSharper disable All
 
-#define SLNMERGE_DEBUG
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
