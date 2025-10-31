@@ -15,8 +15,6 @@ SlnMerge merges the solutions when creating solution file by Unity Editor.
 - [Works with](#works-with)
 - [How to use](#how-to-use)
   - [1. Install SlnMerge](#1-install-slnmerge)
-    - [Method 1. Copy `src/Editor/SlnMerge.cs` to `Assets/Editor` in your Unity project.](#method-1-copy-srceditorslnmergecs-to-assetseditor-in-your-unity-project)
-    - [Method 2. Add the package via git from Package Manager](#method-2-add-the-package-via-git-from-package-manager)
   - [2. Create `ProjectName.sln.mergesettings` and configure a target solution.](#2-create-projectnameslnmergesettings-and-configure-a-target-solution)
 - [Settings](#settings)
   - [Add projects to solution folders](#add-projects-to-solution-folders)
