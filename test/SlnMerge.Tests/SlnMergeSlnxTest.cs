@@ -11,6 +11,7 @@ public class SlnMergeSlnxTest
     [Fact]
     public void Merge()
     {
+        // Arrange
         var slnxOverlayXml = """
                           <Solution>
                             <Configurations>
@@ -53,10 +54,34 @@ public class SlnMergeSlnxTest
                        </Solution>
                        """;
 
-        var slnxOverlay = SlnxFile.ParseFromXml("..\\Overlay.slnx", slnxOverlayXml);
-        var slnxOrig = SlnxFile.ParseFromXml("Original.slnx", slnxOrigXml);
-
+        // Act
+        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
+        var slnxOrig = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Original.slnx", slnxOrigXml);
         var slnxMerged = SlnxFile.Merge(slnxOrig, slnxOverlay);
 
+        // Assert
+        Assert.NotNull(slnxMerged.Root.Configurations);
+        Assert.NotNull(slnxMerged.Root.Folders);
+        Assert.NotNull(slnxMerged.Root.Projects);
+        Assert.Equal(4, slnxMerged.Root.Configurations?.Children.Length);
+        Assert.Equal(3, slnxMerged.Root.Folders.Count);
+        Assert.Equal(6, slnxMerged.Root.Projects.Count);
+
+        Assert.Equal([
+            "MyApp.Client.csproj".ToCurrentPlatformPathForm(),
+            "MyTool.Client.csproj".ToCurrentPlatformPathForm(),
+            "../tools/MyTool/MyTool.csproj".ToCurrentPlatformPathForm(),
+            "../src/MyApp.Server/MyApp.Server.csproj".ToCurrentPlatformPathForm(),
+            "../src/MyApp.Shared/MyApp.Shared.csproj".ToCurrentPlatformPathForm(),
+            "../test/MyApp.Tests/MyApp.Tests.csproj".ToCurrentPlatformPathForm(),
+        ], slnxMerged.Root.Projects.Keys.ToArray());
+
+        Assert.Equal([
+            "/Tools/",
+            "/Solution Items/",
+            "/Server/",
+        ], slnxMerged.Root.Folders.Keys.ToArray());
+
+        Assert.Equal(6, slnxMerged.Root.Folders["/Solution Items/"].Children.Length);
     }
 }

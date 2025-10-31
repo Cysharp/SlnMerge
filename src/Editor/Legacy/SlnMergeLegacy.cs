@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using SlnMerge.Editor;
 
 namespace SlnMerge.Legacy
 {
@@ -52,7 +53,7 @@ namespace SlnMerge.Legacy
                 var overlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + ".Merge.sln");
                 if (!string.IsNullOrEmpty(slnMergeSettings.MergeTargetSolution))
                 {
-                    overlaySolutionFilePath = NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
+                    overlaySolutionFilePath = PathHelper.NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
                 }
                 if (!File.Exists(overlaySolutionFilePath))
                 {
@@ -149,16 +150,16 @@ namespace SlnMerge.Legacy
                             foreach (var solutionItem in solutionItems.Values.ToArray())
                             {
                                 solutionItems.Values.Remove(solutionItem.Key);
-                                var solutionItemPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), solutionItem.Key));
-                                var solutionItemPathRelative = MakeRelative(ctx.MergedSolutionFile.Path, solutionItemPathAbsolute);
+                                var solutionItemPathAbsolute = PathHelper.NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), solutionItem.Key));
+                                var solutionItemPathRelative = PathHelper.MakeRelative(ctx.MergedSolutionFile.Path, solutionItemPathAbsolute);
                                 solutionItems.Values[solutionItemPathRelative] = solutionItemPathRelative;
                             }
                         }
                     }
                     else
                     {
-                        var overlayProjectPathAbsolute = NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), project.Value.Path));
-                        project.Value.Path = MakeRelative(ctx.MergedSolutionFile.Path, overlayProjectPathAbsolute);
+                        var overlayProjectPathAbsolute = PathHelper.NormalizePath(Path.Combine(Path.GetDirectoryName(ctx.OverlaySolutionFile.Path), project.Value.Path));
+                        project.Value.Path = PathHelper.MakeRelative(ctx.MergedSolutionFile.Path, overlayProjectPathAbsolute);
                     }
                     ctx.MergedSolutionFile.Projects.Add(project.Key, project.Value);
                 }
@@ -422,46 +423,6 @@ namespace SlnMerge.Legacy
             }
 
             return projectByPath;
-        }
-
-        private static string NormalizePath(string path)
-        {
-            return Path.GetFullPath(path.Replace(Path.DirectorySeparatorChar == '/' ? '\\' : '/', Path.DirectorySeparatorChar));
-        }
-
-        private static string MakeRelative(string basePath, string targetPath)
-        {
-            var basePathParts = basePath.Split('/', '\\');
-            var targetPathParts = targetPath.Split('/', '\\');
-
-            var targetPathFixed = targetPath;
-            for (var i = 0; i < Math.Min(basePathParts.Length, targetPathParts.Length); i++)
-            {
-                var basePathPrefix = string.Join("/", basePathParts.Take(i + 1));
-                var targetPathPrefix = string.Join("/", targetPathParts.Take(i + 1));
-
-                if (basePathPrefix == targetPathPrefix)
-                {
-                    var pathPrefix = basePathPrefix;
-                    var upperDirCount = (basePathParts.Length - i - 2); // excepts a filename
-
-                    var sb = new StringBuilder();
-                    for (var j = 0; j < upperDirCount; j++)
-                    {
-                        sb.Append("..");
-                        sb.Append(Path.DirectorySeparatorChar);
-                    }
-                    sb.Append(targetPath.Substring(pathPrefix.Length + 1));
-
-                    targetPathFixed = sb.ToString();
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return targetPathFixed;
         }
 
         [DebuggerDisplay("{nameof(SolutionTreeNode)}: {Path,nq}; IsFolder={IsFolder}; Children={Children.Count}")]

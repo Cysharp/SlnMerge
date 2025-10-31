@@ -35,20 +35,36 @@ namespace SlnMerge.Xml
     }
 
     [DebuggerDisplay("Solution: Projects={Projects.Count,nq}; Folders={Folders.Count,nq}")]
-    internal class SolutionElement : Node
+    internal class SolutionElement : Node, IElement
     {
-        public XAttribute[] Attributes { get; set; }
-        public Node[] Children { get; set; }
+        private Node[] _children;
 
-        public Dictionary<string, ProjectElement> Projects { get; set; }
-        public Dictionary<string, FolderElement> Folders { get; set; }
-        public ConfigurationsElement? Configurations { get; set; }
+        public XAttribute[] Attributes { get; set; }
+
+        public Node[] Children
+        {
+            get => _children;
+            set
+            {
+                _children = value;
+                UpdateMappings();
+            }
+        }
+
+        public IReadOnlyDictionary<string, ProjectElement> Projects { get; private set; } = default!;
+        public IReadOnlyDictionary<string, FolderElement> Folders { get; private set; } = default!;
+        public ConfigurationsElement? Configurations { get; private set; }
 
         public SolutionElement(IEnumerable<XAttribute> attributes, IEnumerable<Node> children)
         {
             Attributes = attributes.ToArray();
-            Children = children.ToArray();
+            _children = children.ToArray();
 
+            UpdateMappings();
+        }
+
+        private void UpdateMappings()
+        {
             Projects = EnumerateAllProjects(Children).ToDictionary(k => k.Path);
             Folders = Children.OfType<FolderElement>().ToDictionary(k => k.Name);
             Configurations = Children.OfType<ConfigurationsElement>().SingleOrDefault();
@@ -69,6 +85,103 @@ namespace SlnMerge.Xml
             }
         }
 
+        public void AddOrMergeFolder(FolderElement overlayFolder, MergeStrategy strategy)
+        {
+            if (Folders.TryGetValue(overlayFolder.Name, out var existedFolder))
+            {
+                // Merge
+                existedFolder.Merge(overlayFolder, strategy);
+            }
+            else
+            {
+                // New
+                AddFolder(new FolderElement(overlayFolder.Name)
+                {
+                    Attributes = overlayFolder.Attributes,
+                    Children = overlayFolder.Children
+                });
+            }
+        }
+
+        public void AddOrMergeConfigurations(ConfigurationsElement overlayConfig, MergeStrategy strategy)
+        {
+            if (Configurations != null)
+            {
+                Configurations.Merge(overlayConfig, strategy);
+            }
+            else
+            {
+                _children = _children.Append(overlayConfig).ToArray();
+                UpdateMappings();
+            }
+        }
+
+        public void AddFolder(FolderElement folder)
+        {
+            if (Folders.ContainsKey(folder.Name)) throw new InvalidOperationException($"The folder '{folder.Name}' already exists.");
+
+            _children = _children.Append(folder).ToArray();
+            UpdateMappings();
+        }
+
+        public void RemoveProject(ProjectElement project)
+        {
+            if (!Projects.ContainsKey(project.Path)) throw new InvalidOperationException($"The project '{project.Path}' does not exist.");
+            Remove(project);
+        }
+
+        private void Remove<T>(T element) where T : IKeyedElement
+        {
+            _children = _children.Select(x => RemoveKeyedElement(element, x)).ToArray();
+            UpdateMappings();
+
+            Node RemoveKeyedElement(IKeyedElement e, Node root)
+            {
+                if (root is IElement rootElement)
+                {
+                    var children = new List<Node>(rootElement.Children.Length);
+                    foreach (var child in rootElement.Children)
+                    {
+                        if (child is IKeyedElement keyedChild &&
+                            keyedChild.KeyName == e.KeyName &&
+                            keyedChild.ElementName == e.ElementName &&
+                            keyedChild.Key == e.Key
+                           )
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            children.Add(RemoveKeyedElement(e, child));
+                        }
+                    }
+                    rootElement.Children = children.ToArray();
+                }
+                return root;
+            }
+        }
+
+        public void AddProject(ProjectElement project)
+        {
+            if (Projects.ContainsKey(project.Path)) throw new InvalidOperationException($"The project '{project.Path}' already exists.");
+
+            _children = _children.Append(project).ToArray();
+            UpdateMappings();
+        }
+
+        public void AddChild(Node node)
+        {
+            if (node is ProjectElement proj)
+            {
+                AddProject(proj);
+            }
+            else
+            {
+                _children = _children.Append(node).ToArray();
+                UpdateMappings();
+            }
+        }
+
         public static SolutionElement Create(XElement xElement)
         {
             Debug.Assert(xElement.Name == "Solution");
@@ -86,7 +199,7 @@ namespace SlnMerge.Xml
         }
     }
 
-    internal abstract class Element : Node
+    internal abstract class Element : Node, IElement
     {
         public XAttribute[] Attributes { get; set; } = Array.Empty<XAttribute>();
         public Node[] Children { get; set; } = Array.Empty<Node>();
@@ -120,7 +233,6 @@ namespace SlnMerge.Xml
                     }
                 }
                 mergedChildren.Add(overlayChild);
-
             }
 
             return mergedChildren.ToArray();
@@ -168,11 +280,22 @@ namespace SlnMerge.Xml
         Both,
     }
 
-    internal interface IKeyedElement
+    internal interface IElement
+    {
+        XAttribute[] Attributes { get; set; }
+        Node[] Children { get; set; }
+    }
+
+    internal interface IKeyedElement : IElement
     {
         string ElementName { get; }
         string KeyName { get; }
         string Key { get; }
+    }
+
+    internal interface IFilePathElement
+    {
+        string Path { get; set; }
     }
 
     internal abstract class KeyedElement : Element, IKeyedElement
@@ -244,7 +367,7 @@ namespace SlnMerge.Xml
     }
 
     [DebuggerDisplay("File: {Path,nq}")]
-    internal class FileElement : KeyedElement
+    internal class FileElement : KeyedElement, IFilePathElement
     {
         public string Path
         {
@@ -298,7 +421,7 @@ namespace SlnMerge.Xml
     }
 
     [DebuggerDisplay("Project: {Path,nq}")]
-    internal class ProjectElement : KeyedElement
+    internal class ProjectElement : KeyedElement, IFilePathElement
     {
         public string Path
         {

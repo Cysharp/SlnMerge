@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using SlnMerge.Editor;
 
 namespace SlnMerge.Xml
 {
@@ -16,19 +17,12 @@ namespace SlnMerge.Xml
 
         public SlnxFile(string filePath, SolutionElement root)
         {
+            if (!System.IO.Path.IsPathFullyQualified(filePath)) throw new InvalidOperationException("The file path must be absolute.");
+
             Path = filePath;
             Root = root;
         }
-
-        public void AddFolder(FolderElement folder)
-        {
-            if (!Root.Folders.ContainsKey(folder.Name))
-            {
-                Root.Folders.Add(folder.Name, folder);
-                Root.Children = Root.Children.Append(folder).ToArray();
-            }
-        }
-
+        
         public SlnxFile Clone()
         {
             return new SlnxFile(Path, (SolutionElement)Node.CreateFromXNode(ToXml().Root!));
@@ -39,76 +33,80 @@ namespace SlnMerge.Xml
             return new XDocument(Root.ToXml());
         }
 
+        public void RewritePaths(SlnxFile baseSlnx)
+        {
+            foreach (var e in EnumerateAllFilePathElements(Root))
+            {
+                var pathAbsolute = PathHelper.NormalizePath(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.Path)!, e.Path));
+                var pathRelative = PathHelper.MakeRelative(baseSlnx.Path, pathAbsolute);
+                e.Path = pathRelative;
+            }
+
+            static IEnumerable<IFilePathElement> EnumerateAllFilePathElements(IElement element)
+            {
+                foreach (var c in element.Children)
+                {
+                    if (c is IFilePathElement fpe)
+                    {
+                        yield return fpe;
+                    }
+                    if (c is IElement e)
+                    {
+                        foreach (var c2 in EnumerateAllFilePathElements(e))
+                        {
+                            yield return c2;
+                        }
+                    }
+                }
+            }
+        }
+
         public static SlnxFile ParseFromXml(string filePath, string xml)
         {
             var xDoc = XDocument.Parse(xml);
             return new SlnxFile(filePath, (SolutionElement)Node.CreateFromXNode(xDoc.Element("Solution")!));
         }
 
-        public static SlnxFile Merge(SlnxFile slnxOrig, SlnxFile slnxOverlay)
+        public static SlnxFile Merge(SlnxFile slnxOrig, SlnxFile slnxOverlay, MergeStrategy strategy = MergeStrategy.Overlay)
         {
             slnxOrig = slnxOrig.Clone();
+            slnxOverlay = slnxOverlay.Clone();
 
-            var strategy = MergeStrategy.Overlay;
-            var ignoreProjects = new HashSet<string>();
+            slnxOverlay.RewritePaths(slnxOrig);
+
             foreach (var proj in slnxOverlay.Root.Projects)
             {
                 if (slnxOrig.Root.Projects.ContainsKey(proj.Key))
                 {
-                    if (false)
+                    switch (strategy)
                     {
-                        // All
-                        throw new NotImplementedException();
-                    }
-                    else if (false)
-                    {
-                        // PreserveUnity
-                        ignoreProjects.Add(proj.Key);
-                    }
-                    else if (false)
-                    {
-                        // PreserveOverlay
-                        throw new NotImplementedException();
+                        case MergeStrategy.Overlay:
+                            slnxOrig.Root.RemoveProject(proj.Value);
+                            break;
+                        case MergeStrategy.Preserve:
+                            slnxOverlay.Root.RemoveProject(proj.Value);
+                            break;
+                        case MergeStrategy.Both:
+                            break;
                     }
                 }
             }
 
-            var newChildren = slnxOrig.Root.Children.ToList();
             foreach (var overlayChild in slnxOverlay.Root.Children)
             {
                 if (overlayChild is FolderElement overlayFolder)
                 {
-                    if (slnxOrig.Root.Folders.TryGetValue(overlayFolder.Name, out var existedFolder))
-                    {
-                        // Merge
-                        existedFolder.Merge(overlayFolder, strategy);
-                    }
-                    else
-                    {
-                        // New
-                        var newFolder = new FolderElement(overlayFolder.Name);
-                        newFolder.Attributes = overlayFolder.Attributes;
-                        newFolder.Children = overlayFolder.Children;
-                        newChildren.Add(newFolder);
-                    }
+                    slnxOrig.Root.AddOrMergeFolder(overlayFolder, strategy);
                 }
                 else if (overlayChild is ConfigurationsElement overlayConfig)
                 {
-                    if (slnxOrig.Root.Configurations is { } configOrig)
-                    {
-                        configOrig.Merge(overlayConfig, strategy);
-                    }
-                    else
-                    {
-                        newChildren.Add(overlayConfig);
-                    }
+                    slnxOrig.Root.AddOrMergeConfigurations(overlayConfig, strategy);
                 }
                 else
                 {
-                    newChildren.Add(overlayChild);
+                    slnxOrig.Root.AddChild(overlayChild);
                 }
             }
-            slnxOrig.Root.Children = newChildren.ToArray();
 
             return slnxOrig;
         }
