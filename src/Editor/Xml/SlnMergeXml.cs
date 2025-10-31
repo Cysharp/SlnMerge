@@ -11,6 +11,25 @@ namespace SlnMerge.Xml
 {
     internal static class SlnMergeXml
     {
+        public static bool TryMerge(string solutionFilePath, string solutionFileContent, string overlaySolutionFilePath, SlnMergeSettings slnMergeSettings, ISlnMergeLogger logger, out string? resultSolutionContent)
+        {
+            try
+            {
+                var slnxBase = SlnxFile.ParseFromXml(solutionFilePath, solutionFileContent);
+                var slnxOverlay = SlnxFile.ParseFromFile(overlaySolutionFilePath);
+                var mergedSlnx = Merge(slnxBase, slnxOverlay, slnMergeSettings, logger);
+
+                resultSolutionContent = mergedSlnx.ToXml().ToString();
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Error("Failed to merge the solutions", e);
+                resultSolutionContent = null;
+                return false;
+            }
+        }
+
         public static SlnxFile Merge(SlnxFile slnxBase, SlnxFile slnxOverlay, SlnMergeSettings settings, ISlnMergeLogger logger)
         {
             ValidateSettings(settings);

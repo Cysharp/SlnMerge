@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -59,6 +60,9 @@ namespace SlnMerge.Xml
                 }
             }
         }
+
+        public static SlnxFile ParseFromFile(string filePath)
+            => ParseFromXml(System.IO.Path.GetFullPath(filePath), File.ReadAllText(filePath));
 
         public static SlnxFile ParseFromXml(string filePath, string xml)
         {
