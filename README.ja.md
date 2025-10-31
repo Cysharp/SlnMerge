@@ -30,6 +30,8 @@ Unity とは別にサーバーサイドの C# プロジェクトおよびソリ�
 - Microsoft Visual Studio 2022/2026
 - JetBrains Rider 2025.x
 
+レガシーソリューションフォーマット (.sln) とモダンなソリューションフォーマット (.slnx) の両方に対応しています。
+
 ## 使い方
 ### 1. SlnMerge をインストールする
 Package Manager を使用して git リポジトリからパッケージをインストールできます。
@@ -44,6 +46,9 @@ https://github.com/Cysharp/SlnMerge.git?path=src
 Unity によって生成されるソリューションファイル名に .mergesettings をつけた名前の設定ファイルを用意します。
 
 例えば MyUnityApp プロジェクトの場合は MyUnityApp.sln が生成されるので MyUnityApp.sln.mergesettings ファイルを作成します。
+
+> [!NOTE]
+> `.slnx` フォーマットを使用している場合には以降の `.sln` は `.slnx` と読み替えてください。
 
 ```xml
 <SlnMergeSettings>

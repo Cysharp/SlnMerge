@@ -30,6 +30,8 @@ SlnMerge merges the solutions when creating solution file by Unity Editor.
 - Microsoft Visual Studio 2022/2026
 - JetBrains Rider 2025.x
 
+Both legacy solution format (.sln) and modern solution format (.slnx) are supported.
+
 ## How to use
 
 ### 1. Install SlnMerge
@@ -45,6 +47,9 @@ https://github.com/Cysharp/SlnMerge.git?path=src
 Create a setting XML file named `<ProjectName>.sln.mergesettings`.
 
 For example, when the project name is `MyUnityApp`, Unity Editor generates `MyUnityApp.sln`. You need to create `MyUnityApp.sln.mergesettings`.
+
+> [!NOTE]
+> If you are using `.slnx` format, please read `.sln` as `.slnx` below.
 
 ```xml
 <SlnMergeSettings>
