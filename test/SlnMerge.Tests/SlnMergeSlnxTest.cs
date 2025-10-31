@@ -57,7 +57,13 @@ public class SlnMergeSlnxTest
         // Act
         var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
         var slnxOrig = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Original.slnx", slnxOrigXml);
-        var slnxMerged = SlnxFile.Merge(slnxOrig, slnxOverlay);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+        var slnxMerged = SlnMergeXml.Merge(slnxOrig, slnxOverlay, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         Assert.NotNull(slnxMerged.Root.Configurations);
