@@ -38,6 +38,9 @@ namespace SlnMerge.Xml
     internal class SolutionElement : Node, IElement
     {
         private Node[] _children;
+        private IReadOnlyDictionary<string, ProjectElement>? _projects;
+        private IReadOnlyDictionary<string, FolderElement>? _folders;
+        private ConfigurationsElement? _configurations;
 
         public XAttribute[] Attributes { get; set; }
 
@@ -47,39 +50,40 @@ namespace SlnMerge.Xml
             set
             {
                 _children = value;
-                UpdateMappings();
+                InvalidateMappings();
             }
         }
 
-        public IReadOnlyDictionary<string, ProjectElement> Projects { get; private set; } = default!;
-        public IReadOnlyDictionary<string, FolderElement> Folders { get; private set; } = default!;
-        public ConfigurationsElement? Configurations { get; private set; }
+        public IReadOnlyDictionary<string, ProjectElement> Projects => _projects ??= EnumerateAllProjects(Children).ToDictionary(k => k.Path);
+        public IReadOnlyDictionary<string, FolderElement> Folders => _folders ??= Children.OfType<FolderElement>().ToDictionary(k => k.Name);
+
+        public ConfigurationsElement? Configurations => _configurations ??= _children.OfType<ConfigurationsElement>().SingleOrDefault();
 
         public SolutionElement(IEnumerable<XAttribute> attributes, IEnumerable<Node> children)
         {
             Attributes = attributes.ToArray();
             _children = children.ToArray();
 
-            UpdateMappings();
+            InvalidateMappings();
         }
 
-        private void UpdateMappings()
+        private void InvalidateMappings()
         {
-            Projects = EnumerateAllProjects(Children).ToDictionary(k => k.Path);
-            Folders = Children.OfType<FolderElement>().ToDictionary(k => k.Name);
-            Configurations = Children.OfType<ConfigurationsElement>().SingleOrDefault();
+            _projects = null;
+            _folders = null;
+            _configurations = null;
+        }
 
-            static IEnumerable<ProjectElement> EnumerateAllProjects(IEnumerable<Node> nodes)
+        private static IEnumerable<ProjectElement> EnumerateAllProjects(IEnumerable<Node> nodes)
+        {
+            foreach (var node in nodes)
             {
-                foreach (var node in nodes)
+                if (node is ProjectElement proj) yield return proj;
+                if (node is Element element)
                 {
-                    if (node is ProjectElement proj) yield return proj;
-                    if (node is Element element)
+                    foreach (var proj2 in EnumerateAllProjects(element.Children))
                     {
-                        foreach (var proj2 in EnumerateAllProjects(element.Children))
-                        {
-                            yield return proj2;
-                        }
+                        yield return proj2;
                     }
                 }
             }
@@ -112,7 +116,7 @@ namespace SlnMerge.Xml
             else
             {
                 _children = _children.Append(overlayConfig).ToArray();
-                UpdateMappings();
+                InvalidateMappings();
             }
         }
 
@@ -121,7 +125,7 @@ namespace SlnMerge.Xml
             if (Folders.ContainsKey(folder.Name)) throw new InvalidOperationException($"The folder '{folder.Name}' already exists.");
 
             _children = _children.Append(folder).ToArray();
-            UpdateMappings();
+            InvalidateMappings();
         }
 
         public void RemoveProject(ProjectElement project)
@@ -133,7 +137,7 @@ namespace SlnMerge.Xml
         private void Remove<T>(T element) where T : IKeyedElement
         {
             _children = _children.Select(x => RemoveKeyedElement(element, x)).ToArray();
-            UpdateMappings();
+            InvalidateMappings();
 
             Node RemoveKeyedElement(IKeyedElement e, Node root)
             {
@@ -166,7 +170,16 @@ namespace SlnMerge.Xml
             if (Projects.ContainsKey(project.Path)) throw new InvalidOperationException($"The project '{project.Path}' already exists.");
 
             _children = _children.Append(project).ToArray();
-            UpdateMappings();
+            InvalidateMappings();
+        }
+
+        public void AddProject(ProjectElement project, FolderElement folder)
+        {
+            if (Projects.ContainsKey(project.Path)) throw new InvalidOperationException($"The project '{project.Path}' already exists.");
+            if (!Folders.ContainsKey(folder.Name)) throw new InvalidOperationException($"The folder '{folder.Name}' does not exist.");
+
+            folder.Children = folder.Children.Append(project).ToArray();
+            InvalidateMappings();
         }
 
         public void AddChild(Node node)
@@ -178,7 +191,7 @@ namespace SlnMerge.Xml
             else
             {
                 _children = _children.Append(node).ToArray();
-                UpdateMappings();
+                InvalidateMappings();
             }
         }
 

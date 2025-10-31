@@ -41,7 +41,7 @@ public class SlnMergeSlnxTest
                             <Project Path="test/MyApp.Tests/MyApp.Tests.csproj" />
                           </Solution>
                           """;
-        var slnxOrigXml = """
+        var slnxBaseXml = """
                        <Solution>
                          <Project Path="MyApp.Client.csproj" />
                          <Folder Name="/Tools/">
@@ -56,14 +56,14 @@ public class SlnMergeSlnxTest
 
         // Act
         var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
-        var slnxOrig = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Original.slnx", slnxOrigXml);
+        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Base.slnx", slnxBaseXml);
         var slnMergeSettings = new SlnMergeSettings()
         {
             SolutionFolders = [],
             NestedProjects = [],
             ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
         };
-        var slnxMerged = SlnMergeXml.Merge(slnxOrig, slnxOverlay, slnMergeSettings, SlnMergeNullLogger.Instance);
+        var slnxMerged = SlnMergeXml.Merge(slnxBase, slnxOverlay, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         Assert.NotNull(slnxMerged.Root.Configurations);
@@ -82,6 +82,8 @@ public class SlnMergeSlnxTest
             "../test/MyApp.Tests/MyApp.Tests.csproj".ToCurrentPlatformPathForm(),
         ], slnxMerged.Root.Projects.Keys.ToArray());
 
+        Assert.Equal(1, slnxMerged.Root.Projects["../src/MyApp.Server/MyApp.Server.csproj".ToCurrentPlatformPathForm()].Children.Length);
+
         Assert.Equal([
             "/Tools/",
             "/Solution Items/",
@@ -89,5 +91,167 @@ public class SlnMergeSlnxTest
         ], slnxMerged.Root.Folders.Keys.ToArray());
 
         Assert.Equal(6, slnxMerged.Root.Folders["/Solution Items/"].Children.Length);
+    }
+
+    [Fact]
+    public void Merge_RewritePath()
+    {
+        // Arrange
+        var slnxOverlayXml = """
+                          <Solution>
+                            <Folder Name="/Solution Items/">
+                              <File Path="docs/Overlay.md" />
+                            </Folder>
+                            <File Path="README.md" />
+                            <Project Path="src/Overlay/Overlay.csproj" />
+                          </Solution>
+                          """;
+        var slnxBaseXml = """
+                       <Solution>
+                         <Folder Name="/Solution Items/">
+                           <File Path="docs/Base.md" />
+                         </Folder>
+                         <File Path="README.md" />
+                         <Project Path="src/Base/Base.csproj" />
+                       </Solution>
+                       """;
+
+        // Act
+        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay\\Overlay.slnx", slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Base\\Base.slnx", slnxBaseXml);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+        var slnxMerged = SlnMergeXml.Merge(slnxBase, slnxOverlay, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        var filePaths = Traverse<IFilePathElement>(slnxMerged.Root.Children).Select(x => x.Path.ToCurrentPlatformPathForm()).ToArray();
+        Assert.NotEmpty(filePaths);
+        Assert.Equal([
+            "docs/Base.md".ToCurrentPlatformPathForm(),
+            "../Overlay/docs/Overlay.md".ToCurrentPlatformPathForm(),
+            "README.md".ToCurrentPlatformPathForm(),
+            "src/Base/Base.csproj".ToCurrentPlatformPathForm(),
+            "../Overlay/README.md".ToCurrentPlatformPathForm(),
+            "../Overlay/src/Overlay/Overlay.csproj".ToCurrentPlatformPathForm(),
+        ], filePaths);
+
+        static IEnumerable<T> Traverse<T>(IEnumerable<Node> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                if (node is T t)
+                {
+                    yield return t;
+                }
+
+                if (node is IElement e)
+                {
+                    foreach (var c in Traverse<T>(e.Children))
+                    {
+                        yield return c;
+                    }
+                }
+            }
+        }
+
+    }
+
+    [Fact]
+    public void Merge_SolutionFolder_NewFolder()
+    {
+        // Arrange
+        var slnxOverlayXml = """
+                          <Solution>
+                            <Project Path="src/MyApp.Server/MyApp.Server.csproj">
+                              <BuildType Solution="Publish|*" Project="Release" />
+                            </Project>
+                            <Project Path="src/MyApp.Shared/MyApp.Shared.csproj" />
+                          </Solution>
+                          """;
+        var slnxBaseXml = """
+                       <Solution>
+                         <Project Path="MyApp.Client.csproj" />
+                       </Solution>
+                       """;
+
+        // Act
+        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Base.slnx", slnxBaseXml);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [ new() { FolderPath = "New Folder1" } ],
+            NestedProjects = [ ],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+        var slnxMerged = SlnMergeXml.Merge(slnxBase, slnxOverlay, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        Assert.NotNull(slnxMerged.Root.Folders);
+        Assert.NotNull(slnxMerged.Root.Projects);
+
+        Assert.Equal([
+            "MyApp.Client.csproj".ToCurrentPlatformPathForm(),
+            "../src/MyApp.Server/MyApp.Server.csproj".ToCurrentPlatformPathForm(),
+            "../src/MyApp.Shared/MyApp.Shared.csproj".ToCurrentPlatformPathForm(),
+        ], slnxMerged.Root.Projects.Keys.ToArray());
+
+        Assert.Equal([
+            "/New Folder1/",
+        ], slnxMerged.Root.Folders.Keys.ToArray());
+
+        Assert.Equal(0, slnxMerged.Root.Folders["/New Folder1/"].Children.Length);
+    }
+
+    [Fact]
+    public void Merge_SolutionFolder_NewFolder_NestedFolder()
+    {
+        // Arrange
+        var slnxOverlayXml = """
+                          <Solution>
+                            <Project Path="src/MyApp.Server/MyApp.Server.csproj">
+                              <BuildType Solution="Publish|*" Project="Release" />
+                            </Project>
+                            <Project Path="src/MyApp.Shared/MyApp.Shared.csproj" />
+                          </Solution>
+                          """;
+        var slnxBaseXml = """
+                       <Solution>
+                         <Project Path="MyApp.Client.csproj" />
+                       </Solution>
+                       """;
+
+        // Act
+        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Base.slnx", slnxBaseXml);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [new() { FolderPath = "New Folder1" }, new() { FolderPath = "New Folder2" }],
+            NestedProjects = [new() { ProjectName = "MyApp.Client", FolderPath = "New Folder1" }, new() { ProjectName = "MyApp.Server", FolderPath = "New Folder2" }],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+        var slnxMerged = SlnMergeXml.Merge(slnxBase, slnxOverlay, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        Assert.NotNull(slnxMerged.Root.Folders);
+        Assert.NotNull(slnxMerged.Root.Projects);
+
+        Assert.Equal([
+            "MyApp.Client.csproj".ToCurrentPlatformPathForm(),
+            "../src/MyApp.Server/MyApp.Server.csproj".ToCurrentPlatformPathForm(),
+            "../src/MyApp.Shared/MyApp.Shared.csproj".ToCurrentPlatformPathForm(),
+        ], slnxMerged.Root.Projects.Keys.ToArray());
+
+        Assert.Equal([
+            "/New Folder1/",
+            "/New Folder2/",
+        ], slnxMerged.Root.Folders.Keys.ToArray());
+
+        Assert.Single(slnxMerged.Root.Children.Where(x => x is ProjectElement));
+        Assert.Equal(1, slnxMerged.Root.Folders["/New Folder1/"].Children.Length);
+        Assert.Equal(1, slnxMerged.Root.Folders["/New Folder2/"].Children.Length);
     }
 }
