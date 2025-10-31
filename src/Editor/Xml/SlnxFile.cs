@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using SlnMerge.Editor;
 
 namespace SlnMerge.Xml
 {
@@ -65,50 +64,6 @@ namespace SlnMerge.Xml
         {
             var xDoc = XDocument.Parse(xml);
             return new SlnxFile(filePath, (SolutionElement)Node.CreateFromXNode(xDoc.Element("Solution")!));
-        }
-
-        public static SlnxFile Merge(SlnxFile slnxOrig, SlnxFile slnxOverlay, MergeStrategy strategy = MergeStrategy.Overlay)
-        {
-            slnxOrig = slnxOrig.Clone();
-            slnxOverlay = slnxOverlay.Clone();
-
-            slnxOverlay.RewritePaths(slnxOrig);
-
-            foreach (var proj in slnxOverlay.Root.Projects)
-            {
-                if (slnxOrig.Root.Projects.ContainsKey(proj.Key))
-                {
-                    switch (strategy)
-                    {
-                        case MergeStrategy.Overlay:
-                            slnxOrig.Root.RemoveProject(proj.Value);
-                            break;
-                        case MergeStrategy.Preserve:
-                            slnxOverlay.Root.RemoveProject(proj.Value);
-                            break;
-                        case MergeStrategy.Both:
-                            break;
-                    }
-                }
-            }
-
-            foreach (var overlayChild in slnxOverlay.Root.Children)
-            {
-                if (overlayChild is FolderElement overlayFolder)
-                {
-                    slnxOrig.Root.AddOrMergeFolder(overlayFolder, strategy);
-                }
-                else if (overlayChild is ConfigurationsElement overlayConfig)
-                {
-                    slnxOrig.Root.AddOrMergeConfigurations(overlayConfig, strategy);
-                }
-                else
-                {
-                    slnxOrig.Root.AddChild(overlayChild);
-                }
-            }
-
-            return slnxOrig;
         }
     }
 }

@@ -85,7 +85,7 @@ namespace SlnMerge.Xml
             }
         }
 
-        public void AddOrMergeFolder(FolderElement overlayFolder, MergeStrategy strategy)
+        public void AddOrMergeFolder(FolderElement overlayFolder, ProjectConflictResolution strategy)
         {
             if (Folders.TryGetValue(overlayFolder.Name, out var existedFolder))
             {
@@ -103,7 +103,7 @@ namespace SlnMerge.Xml
             }
         }
 
-        public void AddOrMergeConfigurations(ConfigurationsElement overlayConfig, MergeStrategy strategy)
+        public void AddOrMergeConfigurations(ConfigurationsElement overlayConfig, ProjectConflictResolution strategy)
         {
             if (Configurations != null)
             {
@@ -204,7 +204,7 @@ namespace SlnMerge.Xml
         public XAttribute[] Attributes { get; set; } = Array.Empty<XAttribute>();
         public Node[] Children { get; set; } = Array.Empty<Node>();
 
-        protected static Node[] MergeChildren(IEnumerable<Node> baseChildren, IEnumerable<Node> overlayChildren, MergeStrategy strategy)
+        protected static Node[] MergeChildren(IEnumerable<Node> baseChildren, IEnumerable<Node> overlayChildren, ProjectConflictResolution strategy)
         {
             var mergedChildren = new List<Node>(baseChildren);
             foreach (var overlayChild in overlayChildren)
@@ -215,16 +215,16 @@ namespace SlnMerge.Xml
                                                                     (baseKeyedE.ElementName, baseKeyedE.KeyName, baseKeyedE.Key) == (overlayKeyedE.ElementName, overlayKeyedE.KeyName, overlayKeyedE.Key));
                     if (foundE != null)
                     {
-                        if (strategy == MergeStrategy.Overlay)
+                        if (strategy == ProjectConflictResolution.PreserveOverlay)
                         {
                             mergedChildren.Remove(foundE);
                             mergedChildren.Add(overlayChild);
                         }
-                        else if (strategy == MergeStrategy.Preserve)
+                        else if (strategy == ProjectConflictResolution.PreserveUnity)
                         {
                             continue;
                         }
-                        else if (strategy == MergeStrategy.Both)
+                        else if (strategy == ProjectConflictResolution.PreserveAll)
                         {
                             mergedChildren.Add(overlayChild);
                         }
@@ -238,7 +238,7 @@ namespace SlnMerge.Xml
             return mergedChildren.ToArray();
         }
 
-        protected static XAttribute[] MergeAttributes(IEnumerable<XAttribute> baseAttributes, IEnumerable<XAttribute> overlayAttributes, MergeStrategy strategy)
+        protected static XAttribute[] MergeAttributes(IEnumerable<XAttribute> baseAttributes, IEnumerable<XAttribute> overlayAttributes, ProjectConflictResolution strategy)
         {
             var mergedAttrs = new Dictionary<string, XAttribute>();
             foreach (var attr in baseAttributes)
@@ -253,13 +253,13 @@ namespace SlnMerge.Xml
                 {
                     switch (strategy)
                     {
-                        case MergeStrategy.Overlay:
+                        case ProjectConflictResolution.PreserveOverlay:
                             mergedAttrs[name] = attr;
                             break;
-                        case MergeStrategy.Preserve:
+                        case ProjectConflictResolution.PreserveUnity:
                             // Do nothing, keep base
                             break;
-                        case MergeStrategy.Both:
+                        case ProjectConflictResolution.PreserveAll:
                             // For attributes, "Both" doesn't make much sense; we can choose to keep base
                             break;
                     }
@@ -271,13 +271,6 @@ namespace SlnMerge.Xml
             }
             return mergedAttrs.Values.ToArray();
         }
-    }
-
-    internal enum MergeStrategy
-    {
-        Overlay,
-        Preserve,
-        Both,
     }
 
     internal interface IElement
@@ -359,7 +352,7 @@ namespace SlnMerge.Xml
                 Attributes.OfType<XNode>().Concat(Children.Select(x => x.ToXml())));
         }
 
-        public void Merge(ConfigurationsElement overlay, MergeStrategy strategy = MergeStrategy.Overlay)
+        public void Merge(ConfigurationsElement overlay, ProjectConflictResolution strategy)
         {
             Attributes = MergeAttributes(this.Attributes, overlay.Attributes, strategy);
             Children = MergeChildren(this.Children, overlay.Children, strategy);
@@ -413,7 +406,7 @@ namespace SlnMerge.Xml
         public FolderElement(XElement xElement) : base(xElement) { }
         public FolderElement(string name) : base(name) { }
 
-        public void Merge(FolderElement overlay, MergeStrategy strategy = MergeStrategy.Overlay)
+        public void Merge(FolderElement overlay, ProjectConflictResolution strategy)
         {
             Attributes = MergeAttributes(Attributes, overlay.Attributes, strategy);
             Children = MergeChildren(Children, overlay.Children, strategy);
