@@ -1,4 +1,4 @@
-﻿# top-most EditorConfig file
+# top-most EditorConfig file
 root = true
 
 [*]
@@ -39,3 +39,5 @@ dotnet_diagnostic.IDE0044.severity = none # IDE0044: Make field readonly
 # https://stackoverflow.com/questions/79195382/how-to-disable-fading-unused-methods-in-visual-studio-2022-17-12-0
 dotnet_diagnostic.IDE0051.severity = none # IDE0051: Remove unused private member
 dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match folder structure
+
+file_header_template = Copyright © Cysharp, Inc. All rights reserved.\nThis source code is licensed under the MIT License. See details at https://github.com/Cysharp/SlnMerge.

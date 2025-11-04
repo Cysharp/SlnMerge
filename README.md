@@ -15,8 +15,6 @@ SlnMerge merges the solutions when creating solution file by Unity Editor.
 - [Works with](#works-with)
 - [How to use](#how-to-use)
   - [1. Install SlnMerge](#1-install-slnmerge)
-    - [Method 1. Copy `src/Editor/SlnMerge.cs` to `Assets/Editor` in your Unity project.](#method-1-copy-srceditorslnmergecs-to-assetseditor-in-your-unity-project)
-    - [Method 2. Add the package via git from Package Manager](#method-2-add-the-package-via-git-from-package-manager)
   - [2. Create `ProjectName.sln.mergesettings` and configure a target solution.](#2-create-projectnameslnmergesettings-and-configure-a-target-solution)
 - [Settings](#settings)
   - [Add projects to solution folders](#add-projects-to-solution-folders)
@@ -27,18 +25,17 @@ SlnMerge merges the solutions when creating solution file by Unity Editor.
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Works with
-- Unity 2018.4.5f1 + Windows 10 and macOS 10.15
-- Microsoft Visual Studio 2019
-- JetBrains Rider 2019.2
+- Unity 2022.3+
+- Windows 11 and macOS 10.15
+- Microsoft Visual Studio 2022/2026
+- JetBrains Rider 2025.x
+
+Both legacy solution format (.sln) and modern solution format (.slnx) are supported.
 
 ## How to use
 
 ### 1. Install SlnMerge
-#### Method 1. Copy `src/Editor/SlnMerge.cs` to `Assets/Editor` in your Unity project.
-Clone this repository and copy those files.
-
-#### Method 2. Add the package via git from Package Manager
-If you are using Unity 2019.1 or later, you can use Package Manager to install a package via git.
+You can use Package Manager to install a package via git.
 
 ![](docs/images/SlnMerge-Image-02.png)
 
@@ -50,6 +47,9 @@ https://github.com/Cysharp/SlnMerge.git?path=src
 Create a setting XML file named `<ProjectName>.sln.mergesettings`.
 
 For example, when the project name is `MyUnityApp`, Unity Editor generates `MyUnityApp.sln`. You need to create `MyUnityApp.sln.mergesettings`.
+
+> [!NOTE]
+> If you are using `.slnx` format, please read `.sln` as `.slnx` below.
 
 ```xml
 <SlnMergeSettings>

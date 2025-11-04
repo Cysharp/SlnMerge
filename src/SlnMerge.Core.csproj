@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>9</LangVersion>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <RootNamespace>SlnMerge</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="**/*.meta" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SlnMerge.Tests" />
+  </ItemGroup>
+</Project>
