@@ -50,6 +50,7 @@ For example, when the project name is `MyUnityApp`, Unity Editor generates `MyUn
 
 > [!NOTE]
 > If you are using `.slnx` format, please read `.sln` as `.slnx` below.
+> Solution files can only be merged in the same format. SlnMerge cannot merge `.slnx` file into `.sln` file.
 
 ```xml
 <SlnMergeSettings>
