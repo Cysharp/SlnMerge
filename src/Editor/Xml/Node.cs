@@ -105,6 +105,7 @@ namespace SlnMerge.Xml
                     Children = overlayFolder.Children
                 });
             }
+            InvalidateMappings();
         }
 
         public void AddOrMergeConfigurations(ConfigurationsElement overlayConfig, ProjectConflictResolution strategy)
@@ -116,8 +117,8 @@ namespace SlnMerge.Xml
             else
             {
                 _children = _children.Append(overlayConfig).ToArray();
-                InvalidateMappings();
             }
+            InvalidateMappings();
         }
 
         public void AddFolder(FolderElement folder)
@@ -136,7 +137,7 @@ namespace SlnMerge.Xml
 
         private void Remove<T>(T element) where T : IKeyedElement
         {
-            _children = _children.Select(x => RemoveKeyedElement(element, x)).ToArray();
+            _ = RemoveKeyedElement(element, this);
             InvalidateMappings();
 
             Node RemoveKeyedElement(IKeyedElement e, Node root)
