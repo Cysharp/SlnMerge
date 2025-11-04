@@ -55,8 +55,8 @@ public class SlnMergeSlnxTest
                        """;
 
         // Act
-        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
-        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Base.slnx", slnxBaseXml);
+        var slnxOverlay = SlnxFile.ParseFromXml(@"C:\repos\src\Overlay.slnx".ToCurrentPlatformPathForm(), slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml(@"C:\repos\src\Client\Base.slnx".ToCurrentPlatformPathForm(), slnxBaseXml);
         var slnMergeSettings = new SlnMergeSettings()
         {
             SolutionFolders = [],
@@ -117,8 +117,8 @@ public class SlnMergeSlnxTest
                        """;
 
         // Act
-        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay\\Overlay.slnx", slnxOverlayXml);
-        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Base\\Base.slnx", slnxBaseXml);
+        var slnxOverlay = SlnxFile.ParseFromXml(@"C:\repos\src\Overlay\Overlay.slnx".ToCurrentPlatformPathForm(), slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml(@"C:\repos\src\Base\Base.slnx".ToCurrentPlatformPathForm(), slnxBaseXml);
         var slnMergeSettings = new SlnMergeSettings()
         {
             SolutionFolders = [],
@@ -179,8 +179,8 @@ public class SlnMergeSlnxTest
                        """;
 
         // Act
-        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
-        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Base.slnx", slnxBaseXml);
+        var slnxOverlay = SlnxFile.ParseFromXml(@"C:\repos\src\Overlay.slnx".ToCurrentPlatformPathForm(), slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml(@"C:\repos\src\Client\Base.slnx".ToCurrentPlatformPathForm(), slnxBaseXml);
         var slnMergeSettings = new SlnMergeSettings()
         {
             SolutionFolders = [ new() { FolderPath = "New Folder1" } ],
@@ -225,8 +225,8 @@ public class SlnMergeSlnxTest
                        """;
 
         // Act
-        var slnxOverlay = SlnxFile.ParseFromXml("C:\\repos\\src\\Overlay.slnx", slnxOverlayXml);
-        var slnxBase = SlnxFile.ParseFromXml("C:\\repos\\src\\Client\\Base.slnx", slnxBaseXml);
+        var slnxOverlay = SlnxFile.ParseFromXml(@"C:\repos\src\Overlay.slnx".ToCurrentPlatformPathForm(), slnxOverlayXml);
+        var slnxBase = SlnxFile.ParseFromXml(@"C:\repos\src\Client\Base.slnx".ToCurrentPlatformPathForm(), slnxBaseXml);
         var slnMergeSettings = new SlnMergeSettings()
         {
             SolutionFolders = [new() { FolderPath = "New Folder1" }, new() { FolderPath = "New Folder2" }],
