@@ -7,6 +7,10 @@
     <File Path="README.ja.md" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="external/vs-solutionpersistence-private/SlnMerge.Microsoft.VisualStudio.SolutionPersistence.csproj">
+    <BuildDependency Project="src/SlnMerge.Weavers.Internalize/SlnMerge.Weavers.Internalize.csproj" />
+  </Project>
   <Project Path="src/SlnMerge.Core.csproj" />
+  <Project Path="src/SlnMerge.Weavers.Internalize/SlnMerge.Weavers.Internalize.csproj" Id="c5713408-7284-4d34-a434-922a8e6fed4b" />
   <Project Path="test/SlnMerge.Tests/SlnMerge.Tests.csproj" />
 </Solution>

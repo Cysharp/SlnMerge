@@ -1,0 +1,3 @@
+[submodule "external/vs-solutionpersistence"]
+	path = external/vs-solutionpersistence
+	url = https://github.com/microsoft/vs-solutionpersistence.git
