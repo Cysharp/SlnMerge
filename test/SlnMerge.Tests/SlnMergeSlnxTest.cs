@@ -21,12 +21,10 @@ public class SlnMergeSlnxTest
                               <BuildType Name="Release" />
                             </Configurations>
                             <Folder Name="/Solution Items/">
-                              <File Path=".gitlab-ci.yml" />
+                              <File Path=".github/workflows/build.yaml" />
                               <File Path="Directory.Build.props" />
                               <File Path="LICENSE.md" />
                               <File Path="README.md" />
-                              <File Path="signfile.bat" />
-                              <File Path="version.json" />
                             </Folder>
                             <Folder Name="/Tools/">
                               <Project Path="tools/MyTool/MyTool.csproj" Id="13fddb1c-d4e7-453a-b582-7de8ba522a6e">
@@ -91,7 +89,7 @@ public class SlnMergeSlnxTest
             "/Server/",
         ], slnxMerged.Root.Folders.Keys.ToArray());
 
-        Assert.Equal(6, slnxMerged.Root.Folders["/Solution Items/"].Children.Length);
+        Assert.Equal(4, slnxMerged.Root.Folders["/Solution Items/"].Children.Length);
     }
 
     [Fact]

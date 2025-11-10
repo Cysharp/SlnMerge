@@ -42,15 +42,23 @@ namespace SlnMerge
                 // Determine a overlay solution path.
                 var isSlnx = Path.GetExtension(solutionFilePath) == ".slnx";
                 var overlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + $".Merge.{(isSlnx ? "slnx" : "sln")}");
+                var alternativeOverlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + $".Merge.{(isSlnx ? "sln" : "slnx")}");
                 if (!string.IsNullOrEmpty(slnMergeSettings.MergeTargetSolution))
                 {
                     overlaySolutionFilePath = PathHelper.NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
                 }
                 if (!File.Exists(overlaySolutionFilePath))
                 {
-                    logger.Warn($"Cannot load the solution file to merge. skipped: {overlaySolutionFilePath}");
-                    resultSolutionContent = null;
-                    return false;
+                    if (File.Exists(alternativeOverlaySolutionFilePath))
+                    {
+                        overlaySolutionFilePath = alternativeOverlaySolutionFilePath;
+                    }
+                    else
+                    {
+                        logger.Warn($"Cannot load the solution file to merge. skipped: {overlaySolutionFilePath}");
+                        resultSolutionContent = null;
+                        return false;
+                    }
                 }
 
                 // Merge the solutions.
