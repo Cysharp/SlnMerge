@@ -28,11 +28,11 @@ public class ModuleWeaver : BaseModuleWeaver
 
         // Add InternalsVisibleTo attributes
         var attrCtor = ModuleDefinition.ImportReference(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute).GetConstructor([typeof(string)]));
-        foreach (var target in new [] { "SlnMerge", "SlnMerge.Core" })
+        foreach (var target in new [] { "SlnMerge", "SlnMerge.Core", "SlnMerge.Tests" })
         {
             var customAttribute = new CustomAttribute(attrCtor);
             customAttribute.ConstructorArguments.Add(new CustomAttributeArgument(ModuleDefinition.TypeSystem.String, target));
-            ModuleDefinition.CustomAttributes.Add(customAttribute);
+            ModuleDefinition.Assembly.CustomAttributes.Add(customAttribute);
         }
     }
 
