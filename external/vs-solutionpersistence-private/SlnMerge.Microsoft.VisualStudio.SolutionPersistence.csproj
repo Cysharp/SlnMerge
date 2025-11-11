@@ -43,4 +43,10 @@
       <CustomToolNamespace>Microsoft.VisualStudio.SolutionPersistence</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SlnMerge.Core" />
+    <InternalsVisibleTo Include="SlnMerge.Editor" />
+    <InternalsVisibleTo Include="SlnMerge.Tests" />
+  </ItemGroup>
 </Project>

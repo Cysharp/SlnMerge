@@ -25,15 +25,6 @@ public class ModuleWeaver : BaseModuleWeaver
                 typeDefinition.IsPublic = false;
             }
         }
-
-        // Add InternalsVisibleTo attributes
-        var attrCtor = ModuleDefinition.ImportReference(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute).GetConstructor([typeof(string)]));
-        foreach (var target in new [] { "SlnMerge", "SlnMerge.Core", "SlnMerge.Tests", "SlnMerge.Editor" })
-        {
-            var customAttribute = new CustomAttribute(attrCtor);
-            customAttribute.ConstructorArguments.Add(new CustomAttributeArgument(ModuleDefinition.TypeSystem.String, target));
-            ModuleDefinition.Assembly.CustomAttributes.Add(customAttribute);
-        }
     }
 
     public override IEnumerable<string> GetAssembliesForScanning() => [];
