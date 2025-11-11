@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using SlnMerge.Legacy;
+using SlnMerge.Persistence;
 using SlnMerge.Xml;
 
 namespace SlnMerge
@@ -18,18 +19,28 @@ namespace SlnMerge
             logger.Debug(solutionFileContent);
             try
             {
+                var solutionName = Path.GetFileNameWithoutExtension(solutionFilePath);
+                var isSlnx = Path.GetExtension(solutionFilePath) == ".slnx";
+
                 // Load SlnMerge settings from .mergesttings
                 var slnFileDirectory = Path.GetDirectoryName(solutionFilePath);
                 var slnMergeSettings = new SlnMergeSettings();
-                var slnMergeSettingsPath = Path.Combine(slnFileDirectory, Path.GetFileName(solutionFilePath) + ".mergesettings");
+                var slnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "slnx" : "sln")}.mergesettings");
+                var alternativeSlnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "sln" : "slnx")}.mergesettings");
+
                 if (File.Exists(slnMergeSettingsPath))
                 {
                     logger.Debug($"Using SlnMerge Settings: {slnMergeSettingsPath}");
                     slnMergeSettings = SlnMergeSettings.FromFile(slnMergeSettingsPath);
                 }
+                else if (File.Exists(alternativeSlnMergeSettingsPath))
+                {
+                    logger.Debug($"Using SlnMerge Settings: {alternativeSlnMergeSettingsPath}");
+                    slnMergeSettings = SlnMergeSettings.FromFile(alternativeSlnMergeSettingsPath);
+                }
                 else
                 {
-                    logger.Debug($"SlnMerge Settings (Not found): {slnMergeSettingsPath}");
+                    logger.Debug($"SlnMerge Settings (Not found): {slnMergeSettingsPath} or {alternativeSlnMergeSettingsPath}");
                 }
 
                 if (slnMergeSettings.Disabled)
@@ -40,9 +51,8 @@ namespace SlnMerge
                 }
 
                 // Determine a overlay solution path.
-                var isSlnx = Path.GetExtension(solutionFilePath) == ".slnx";
-                var overlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + $".Merge.{(isSlnx ? "slnx" : "sln")}");
-                var alternativeOverlaySolutionFilePath = Path.Combine(slnFileDirectory, Path.GetFileNameWithoutExtension(solutionFilePath) + $".Merge.{(isSlnx ? "sln" : "slnx")}");
+                var overlaySolutionFilePath = Path.Combine(slnFileDirectory, $"{solutionName}.Merge.{(isSlnx ? "slnx" : "sln")}");
+                var alternativeOverlaySolutionFilePath = Path.Combine(slnFileDirectory, $"{solutionName}.Merge.{(isSlnx ? "sln" : "slnx")}");
                 if (!string.IsNullOrEmpty(slnMergeSettings.MergeTargetSolution))
                 {
                     overlaySolutionFilePath = PathHelper.NormalizePath(Path.Combine(slnFileDirectory, slnMergeSettings.MergeTargetSolution));
@@ -62,8 +72,13 @@ namespace SlnMerge
                 }
 
                 // Merge the solutions.
-                return isSlnx ? SlnMergeXml.TryMerge(solutionFilePath, solutionFileContent, overlaySolutionFilePath, slnMergeSettings, logger, out resultSolutionContent)
-                              : SlnMergeLegacy.TryMerge(solutionFilePath, solutionFileContent, overlaySolutionFilePath, slnMergeSettings, logger, out resultSolutionContent);
+                logger.Debug($"Start merging: Base={solutionFilePath}; Overlay={overlaySolutionFilePath}");
+
+                var succeeded = SlnMergePersistence.TryMerge(solutionFilePath, solutionFileContent, overlaySolutionFilePath, slnMergeSettings, logger, out resultSolutionContent);
+
+                logger.Debug($"TryMerge: Succeeded:{succeeded}\n{resultSolutionContent}");
+
+                return succeeded;
             }
             catch (Exception e)
             {

@@ -23,8 +23,8 @@ namespace SlnMerge.Persistence
             {
                 var baseSlnSerializer = SolutionSerializers.GetSerializerByMoniker(solutionFilePath)!;
                 var overlaySlnSerializer = SolutionSerializers.GetSerializerByMoniker(overlaySolutionFilePath)!;
-                var baseSln = baseSlnSerializer.OpenAsync(solutionFilePath, CancellationToken.None).GetAwaiter().GetResult();
-                var overlaySln = overlaySlnSerializer.OpenAsync(overlaySolutionFilePath, CancellationToken.None).GetAwaiter().GetResult();
+                var baseSln = ReadSolutionFromString(solutionFileContent, solutionFilePath);
+                var overlaySln = ReadSolutionFromPath(overlaySolutionFilePath);
                 MergeTo(baseSln, solutionFilePath, overlaySln, overlaySolutionFilePath, slnMergeSettings, logger);
 
                 Func<Stream, SolutionModel, CancellationToken, Task> saveAsyncFunc =
@@ -43,6 +43,20 @@ namespace SlnMerge.Persistence
                 resultSolutionContent = null;
                 return false;
             }
+        }
+
+        private static SolutionModel ReadSolutionFromString(string solutionContent, string moniker)
+        {
+            var serializer = SolutionSerializers.GetSerializerByMoniker(moniker)!;
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(solutionContent));
+            return (serializer.Name == "Slnx")
+                ? SolutionSerializers.SlnXml.OpenAsync(stream, CancellationToken.None).GetAwaiter().GetResult()
+                : SolutionSerializers.SlnFileV12.OpenAsync(stream, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        private static SolutionModel ReadSolutionFromPath(string moniker)
+        {
+            return SolutionSerializers.GetSerializerByMoniker(moniker)!.OpenAsync(moniker, CancellationToken.None).GetAwaiter().GetResult();
         }
 
         internal static void MergeTo(SolutionModel baseSln, string baseSlnPath, SolutionModel overlaySln, string overlaySlnPath, SlnMergeSettings settings, ISlnMergeLogger logger)
@@ -67,7 +81,6 @@ namespace SlnMerge.Persistence
                             break;
                         case ProjectConflictResolution.PreserveAll:
                             throw new InvalidOperationException($"The project '{proj.FilePath}' conflicts with an existing project in the base solution.");
-                            break;
                     }
                 }
             }
