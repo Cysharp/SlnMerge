@@ -136,7 +136,8 @@ namespace SlnMerge.Persistence
                 }
                 else
                 {
-                    throw new NotImplementedException();
+                    //throw new NotImplementedException();
+                    logger.Warn($"Unknown solution item type: {item.GetType().Name}");
                 }
             }
             // Update dependencies after all projects are added
@@ -168,17 +169,17 @@ namespace SlnMerge.Persistence
             foreach (var nested in settings.NestedProjects)
             {
                 var nestedProjectNamePattern = new Regex($"^{Regex.Escape(nested.ProjectName).Replace(@"\*", ".*").Replace(@"\?", ".")}$");
-                var matchedProj = baseSln.SolutionProjects.FirstOrDefault(x => nestedProjectNamePattern.IsMatch(x.ActualDisplayName));
-                if (matchedProj is not null)
+                var matchedProjects = baseSln.SolutionProjects.Where(x => nestedProjectNamePattern.IsMatch(x.ActualDisplayName));
+                var destFolder = baseSln.FindFolder(NormalizeSolutionFolderPath(nested.FolderPath));
+                foreach (var matchedProject in matchedProjects)
                 {
-                    var destFolder = baseSln.FindFolder(NormalizeSolutionFolderPath(nested.FolderPath));
                     if (destFolder is not null)
                     {
-                        matchedProj.MoveToFolder(destFolder);
+                        matchedProject.MoveToFolder(destFolder);
                     }
                     else
                     {
-                        logger.Warn($"The destination folder '{nested.FolderPath}' was not found. (NestedProject: {nested.ProjectName}; MatchedProject: {matchedProj.ActualDisplayName})");
+                        logger.Warn($"The destination folder '{nested.FolderPath}' was not found. (NestedProject: {nested.ProjectName}; MatchedProject: {matchedProject.ActualDisplayName})");
                     }
                 }
             }
