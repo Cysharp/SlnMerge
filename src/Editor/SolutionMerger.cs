@@ -12,9 +12,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SlnMerge.Persistence
+namespace SlnMerge
 {
-    internal class SlnMergePersistence
+    internal class SolutionMerger
     {
         public static bool TryMerge(string solutionFilePath, string solutionFileContent, string overlaySolutionFilePath, SlnMergeSettings slnMergeSettings, ISlnMergeLogger logger, out string? resultSolutionContent)
         {

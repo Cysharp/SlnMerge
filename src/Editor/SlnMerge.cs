@@ -6,7 +6,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using SlnMerge.Persistence;
 
 namespace SlnMerge
 {
@@ -72,7 +71,7 @@ namespace SlnMerge
                 // Merge the solutions.
                 logger.Debug($"Start merging: Base={solutionFilePath}; Overlay={overlaySolutionFilePath}");
 
-                var succeeded = SlnMergePersistence.TryMerge(solutionFilePath, solutionFileContent, overlaySolutionFilePath, slnMergeSettings, logger, out resultSolutionContent);
+                var succeeded = SolutionMerger.TryMerge(solutionFilePath, solutionFileContent, overlaySolutionFilePath, slnMergeSettings, logger, out resultSolutionContent);
 
                 logger.Debug($"TryMerge: Succeeded:{succeeded}\n{resultSolutionContent}");
 

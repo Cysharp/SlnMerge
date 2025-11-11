@@ -4,12 +4,11 @@
 using System.Text;
 using Microsoft.VisualStudio.SolutionPersistence.Model;
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
-using SlnMerge.Persistence;
 using Xunit;
 
 namespace SlnMerge.Tests;
 
-public class SlnMergePersistenceTest
+public class SolutionMergerTest
 {
     [Fact]
     public void Merge()
@@ -67,7 +66,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -162,7 +161,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -226,7 +225,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnBase, slnBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnBase, slnBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnBase);
@@ -346,7 +345,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
@@ -445,7 +444,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnBase, slnBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnBase, slnBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnBase);
@@ -534,7 +533,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
 
         // Assert
@@ -595,7 +594,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -654,7 +653,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -712,7 +711,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -759,7 +758,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
+        var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
     }
 
     [Fact]
@@ -791,7 +790,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -839,7 +838,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -892,7 +891,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -947,7 +946,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -995,7 +994,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
+        var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
     }
 
 
@@ -1033,7 +1032,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1087,7 +1086,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1144,7 +1143,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1205,7 +1204,7 @@ public class SlnMergePersistenceTest
         };
 
         // Act
-        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
