@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <None Remove="**/*.meta" />
+    <None Remove="Editor\SlnMerge.Microsoft.VisualStudio.SolutionPersistence.dll" />
   </ItemGroup>
 
   <ItemGroup>
