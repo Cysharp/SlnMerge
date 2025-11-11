@@ -178,6 +178,18 @@ namespace SlnMerge.Persistence
                 }
             }
 
+            foreach (var overlayProp in overlaySln.Properties)
+            {
+                var baseProp = baseSln.FindProperties(overlayProp.Id) ?? baseSln.AddProperties(overlayProp.Id, overlayProp.Scope);
+                foreach (var (key, value) in overlayProp)
+                {
+                    if (!baseProp.ContainsKey(key))
+                    {
+                        baseProp.Add(key, value);
+                    }
+                }
+            }
+
             // Add or move projects into solution folders
             foreach (var nested in settings.NestedProjects)
             {

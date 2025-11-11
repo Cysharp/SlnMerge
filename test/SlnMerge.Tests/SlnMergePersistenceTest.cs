@@ -70,8 +70,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
 
         Assert.Equal("""
                      <Solution>
@@ -165,10 +165,338 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
     }
 
+    [Fact]
+    public void Merge_BaseSln_OverlaySlnx()
+    {
+        // Arrange
+        var slnBaseSlnV12 = """
+                          Microsoft Visual Studio Solution File, Format Version 12.00
+                          # Visual Studio 16
+                          Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{1E7138DC-D3E2-51A8-4059-67524470B2E7}"
+                          EndProject
+                          Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{A94A546A-4413-A73D-F517-3C1A7CCFE662}"
+                          EndProject
+                          Global
+                          	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                          		Debug|Any CPU = Debug|Any CPU
+                          		Release|Any CPU = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.Build.0 = Release|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.Build.0 = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(SolutionProperties) = preSolution
+                          		HideSolutionNode = FALSE
+                          	EndGlobalSection
+                          	GlobalSection(MonoDevelopProperties) = preSolution
+                          		StartupItem = Assembly-CSharp.csproj
+                          	EndGlobalSection
+                          EndGlobal
+                          """;
+        var slnxOverlayXml = """
+                          <Solution>
+                            <Configurations>
+                              <BuildType Name="Debug" />
+                              <BuildType Name="Publish" />
+                              <BuildType Name="Release" />
+                            </Configurations>
+                            <Project Path="src/MyApp.Server/MyApp.Server.csproj" />
+                          </Solution>
+                          """;
+
+        var slnBasePath = @"C:\repos\src\Client\Base.sln".ToCurrentPlatformPathForm();
+        var slnxOverlayPath = @"C:\repos\src\Overlay.slnx".ToCurrentPlatformPathForm();
+        var slnBase = CreateSolutionModelFromSln(slnBaseSlnV12);
+        var slnxOverlay = CreateSolutionModelFromSlnx(slnxOverlayXml);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+
+        // Act
+        SlnMergePersistence.MergeTo(slnBase, slnBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        var mergedSln = SerializeSolutionToSln(slnBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnBase);
+
+        Assert.Equal("""
+                     Microsoft Visual Studio Solution File, Format Version 12.00
+                     # Visual Studio 16
+                     Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{1E7138DC-D3E2-51A8-4059-67524470B2E7}"
+                     EndProject
+                     Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{A94A546A-4413-A73D-F517-3C1A7CCFE662}"
+                     EndProject
+                     Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyApp.Server", "..\src\MyApp.Server\MyApp.Server.csproj", "{3A3E0043-9A70-D936-82A5-445F0CA81399}"
+                     EndProject
+                     Global
+                     	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                     		Debug|Any CPU = Debug|Any CPU
+                     		Release|Any CPU = Release|Any CPU
+                     		Publish|Any CPU = Publish|Any CPU
+                     	EndGlobalSection
+                     	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.Build.0 = Release|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Publish|Any CPU.ActiveCfg = Publish|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Publish|Any CPU.Build.0 = Publish|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.Build.0 = Release|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Publish|Any CPU.ActiveCfg = Publish|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Publish|Any CPU.Build.0 = Publish|Any CPU
+                     		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                     		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                     		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                     		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Release|Any CPU.Build.0 = Release|Any CPU
+                     		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Publish|Any CPU.ActiveCfg = Publish|Any CPU
+                     		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Publish|Any CPU.Build.0 = Publish|Any CPU
+                     	EndGlobalSection
+                     	GlobalSection(SolutionProperties) = preSolution
+                     		HideSolutionNode = FALSE
+                     	EndGlobalSection
+                     	GlobalSection(MonoDevelopProperties) = preSolution
+                     		StartupItem = Assembly-CSharp.csproj
+                     	EndGlobalSection
+                     EndGlobal
+                     """, mergedSln);
+        Assert.Equal("""
+                     <Solution>
+                       <Configurations>
+                         <BuildType Name="Debug" />
+                         <BuildType Name="Publish" />
+                         <BuildType Name="Release" />
+                       </Configurations>
+                       <Project Path="../src/MyApp.Server/MyApp.Server.csproj" />
+                       <Project Path="Assembly-CSharp-Editor.csproj" />
+                       <Project Path="Assembly-CSharp.csproj" />
+                       <Properties Name="MonoDevelopProperties">
+                         <Property Name="StartupItem" Value="Assembly-CSharp.csproj" />
+                       </Properties>
+                     </Solution>
+                     """, mergedSlnx);
+    }
+
+    [Fact]
+    public void Merge_BaseSlnx_OverlaySln()
+    {
+        // Arrange
+        var slnxBaseXml = """
+                          <Solution>
+                            <Project Path="Assembly-CSharp.csproj" />
+                            <Project Path="SlnMerge.Editor.csproj" />
+                          </Solution>
+                          """;
+        var slnOverlaySlnV12 = """
+                          Microsoft Visual Studio Solution File, Format Version 12.00
+                          # Visual Studio Version 16
+                          VisualStudioVersion = 16.0.29509.3
+                          MinimumVisualStudioVersion = 10.0.40219.1
+                          Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nantoka.Server", "Nantoka.Server\Nantoka.Server.csproj", "{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}"
+                          EndProject
+                          Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project Settings", "Project Settings", "{34006C71-946B-49BF-BBCB-BB091E5A3AE7}"
+                          	ProjectSection(SolutionItems) = preProject
+                          		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
+                          	EndProjectSection
+                          EndProject
+                          Global
+                          	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                          		Debug|Any CPU = Debug|Any CPU
+                          		Release|Any CPU = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Release|Any CPU.Build.0 = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(SolutionProperties) = preSolution
+                          		HideSolutionNode = FALSE
+                          	EndGlobalSection
+                          	GlobalSection(ExtensibilityGlobals) = postSolution
+                          		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
+                          	EndGlobalSection
+                          EndGlobal
+                          """;
+
+        var slnxBasePath = @"C:\repos\src\Client\Base.slnx".ToCurrentPlatformPathForm();
+        var slnOverlayPath = @"C:\repos\src\Overlay.sln".ToCurrentPlatformPathForm();
+        var slnxBase = CreateSolutionModelFromSlnx(slnxBaseXml);
+        var slnOverlay = CreateSolutionModelFromSln(slnOverlaySlnV12);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+
+        // Act
+        SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
+
+        Assert.Equal("""
+                     <Solution>
+                       <Folder Name="/Project Settings/" Id="34006c71-946b-49bf-bbcb-bb091e5a3ae7">
+                         <File Path="../../Nantoka.Server/.gitignore" />
+                       </Folder>
+                       <Project Path="../Nantoka.Server/Nantoka.Server.csproj" />
+                       <Project Path="Assembly-CSharp.csproj" />
+                       <Project Path="SlnMerge.Editor.csproj" />
+                       <Properties Name="Visual Studio">
+                         <Property Name="OpenWith" Value="Visual Studio Version 16" />
+                         <Property Name="SolutionId" Value="30d3efc0-a5f4-4446-b14e-1c2c1740aa87" />
+                       </Properties>
+                     </Solution>
+                     """, mergedSlnx);
+    }
+
+    [Fact]
+    public void Merge_BaseSln_OverlaySln()
+    {
+        // Arrange
+        var slnBaseSlnV12 = """
+                          Microsoft Visual Studio Solution File, Format Version 12.00
+                          # Visual Studio 16
+                          Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{1E7138DC-D3E2-51A8-4059-67524470B2E7}"
+                          EndProject
+                          Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{A94A546A-4413-A73D-F517-3C1A7CCFE662}"
+                          EndProject
+                          Global
+                          	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                          		Debug|Any CPU = Debug|Any CPU
+                          		Release|Any CPU = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                          		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.Build.0 = Release|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                          		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.Build.0 = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(SolutionProperties) = preSolution
+                          		HideSolutionNode = FALSE
+                          	EndGlobalSection
+                          	GlobalSection(MonoDevelopProperties) = preSolution
+                          		StartupItem = Assembly-CSharp.csproj
+                          	EndGlobalSection
+                          EndGlobal
+                          """;
+        var slnxOverlaySlnV12 = """
+                          Microsoft Visual Studio Solution File, Format Version 12.00
+                          # Visual Studio Version 16
+                          VisualStudioVersion = 16.0.29509.3
+                          MinimumVisualStudioVersion = 10.0.40219.1
+                          Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nantoka.Server", "Nantoka.Server\Nantoka.Server.csproj", "{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}"
+                          EndProject
+                          Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project Settings", "Project Settings", "{34006C71-946B-49BF-BBCB-BB091E5A3AE7}"
+                          	ProjectSection(SolutionItems) = preProject
+                          		..\Nantoka.Server\.gitignore = ..\Nantoka.Server\.gitignore
+                          	EndProjectSection
+                          EndProject
+                          Global
+                          	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                          		Debug|Any CPU = Debug|Any CPU
+                          		Release|Any CPU = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                          		{053476FC-B8B2-4A14-AED2-3733DFD5DFC3}.Release|Any CPU.Build.0 = Release|Any CPU
+                          	EndGlobalSection
+                          	GlobalSection(SolutionProperties) = preSolution
+                          		HideSolutionNode = FALSE
+                          	EndGlobalSection
+                          	GlobalSection(ExtensibilityGlobals) = postSolution
+                          		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
+                          	EndGlobalSection
+                          EndGlobal
+                          """;
+
+        var slnBasePath = @"C:\repos\src\Client\Base.sln".ToCurrentPlatformPathForm();
+        var slnOverlayPath = @"C:\repos\src\Overlay.sln".ToCurrentPlatformPathForm();
+        var slnBase = CreateSolutionModelFromSln(slnBaseSlnV12);
+        var slnOverlay = CreateSolutionModelFromSln(slnxOverlaySlnV12);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+
+        // Act
+        SlnMergePersistence.MergeTo(slnBase, slnBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        var mergedSln = SerializeSolutionToSln(slnBase);
+
+        Assert.Equal("""
+                     Microsoft Visual Studio Solution File, Format Version 12.00
+                     # Visual Studio 16
+                     VisualStudioVersion = 16.0.29509.3
+                     MinimumVisualStudioVersion = 10.0.40219.1
+                     Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{1E7138DC-D3E2-51A8-4059-67524470B2E7}"
+                     EndProject
+                     Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{A94A546A-4413-A73D-F517-3C1A7CCFE662}"
+                     EndProject
+                     Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nantoka.Server", "..\Nantoka.Server\Nantoka.Server.csproj", "{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}"
+                     EndProject
+                     Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project Settings", "Project Settings", "{34006C71-946B-49BF-BBCB-BB091E5A3AE7}"
+                     	ProjectSection(SolutionItems) = preProject
+                     		..\..\Nantoka.Server\.gitignore = ..\..\Nantoka.Server\.gitignore
+                     	EndProjectSection
+                     EndProject
+                     Global
+                     	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                     		Debug|Any CPU = Debug|Any CPU
+                     		Release|Any CPU = Release|Any CPU
+                     	EndGlobalSection
+                     	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                     		{1E7138DC-D3E2-51A8-4059-67524470B2E7}.Release|Any CPU.Build.0 = Release|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                     		{A94A546A-4413-A73D-F517-3C1A7CCFE662}.Release|Any CPU.Build.0 = Release|Any CPU
+                     		{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                     		{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                     		{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                     		{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}.Release|Any CPU.Build.0 = Release|Any CPU
+                     	EndGlobalSection
+                     	GlobalSection(SolutionProperties) = preSolution
+                     		HideSolutionNode = FALSE
+                     	EndGlobalSection
+                     	GlobalSection(ExtensibilityGlobals) = postSolution
+                     		SolutionGuid = {30D3EFC0-A5F4-4446-B14E-1C2C1740AA87}
+                     	EndGlobalSection
+                     	GlobalSection(MonoDevelopProperties) = preSolution
+                     		StartupItem = Assembly-CSharp.csproj
+                     	EndGlobalSection
+                     EndGlobal
+                     """, mergedSln);
+    }
     [Fact]
     public void Merge_Project_Dependencies()
     {
@@ -210,8 +538,8 @@ public class SlnMergePersistenceTest
 
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -270,8 +598,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Folder Name="/Solution Items/">
@@ -329,8 +657,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Folder Name="/Solution Items/">
@@ -387,8 +715,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -466,8 +794,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Project Path="MyApp.csproj" />
@@ -514,8 +842,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -567,8 +895,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -622,8 +950,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -708,8 +1036,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Folder Name="/Solution Items/" />
@@ -762,8 +1090,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -819,8 +1147,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -880,8 +1208,8 @@ public class SlnMergePersistenceTest
         SlnMergePersistence.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
 
         // Assert
-        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
         Assert.Equal("""
                      <Solution>
                        <Configurations>
@@ -909,12 +1237,12 @@ public class SlnMergePersistenceTest
     {
         var stream = new MemoryStream();
         SolutionSerializers.SlnXml.SaveAsync(stream, sln, CancellationToken.None).GetAwaiter().GetResult();
-        return Encoding.UTF8.GetString(stream.ToArray());
+        return Encoding.UTF8.GetString(stream.ToArray()).Trim();
     }
     private string SerializeSolutionToSln(SolutionModel sln)
     {
         var stream = new MemoryStream();
         SolutionSerializers.SlnFileV12.SaveAsync(stream, sln, CancellationToken.None).GetAwaiter().GetResult();
-        return Encoding.UTF8.GetString(stream.ToArray());
+        return Encoding.UTF8.GetString(stream.ToArray()).Trim();
     }
 }
