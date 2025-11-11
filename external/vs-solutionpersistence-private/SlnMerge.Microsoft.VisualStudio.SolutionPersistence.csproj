@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <WeaverFiles Include="$(SolutionDir)artifacts\bin\SlnMerge.Weavers.Internalize\$(Configuration)\SlnMerge.Weavers.Internalize.dll" />
+    <WeaverFiles Include="$(SolutionDir)artifacts\bin\SlnMerge.Weavers.Internalize\$(ArtifactsPivots)\SlnMerge.Weavers.Internalize.dll" />
   </ItemGroup>
 
   <ItemGroup>
