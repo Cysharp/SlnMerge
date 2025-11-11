@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -51,9 +52,9 @@ namespace SlnMerge.Persistence
             RewritePaths(overlaySln, overlaySlnPath, baseSlnPath);
 
             // Handle project conflicts
-            foreach (var proj in overlaySln.SolutionProjects)
+            foreach (var proj in overlaySln.SolutionProjects.ToArray())
             {
-                var projInBaseSln = baseSln.SolutionProjects.FirstOrDefault(x => x.FilePath == proj.FilePath);
+                var projInBaseSln = baseSln.SolutionProjects.FirstOrDefault(x => x.ActualDisplayName == proj.ActualDisplayName);
                 if (projInBaseSln is not null)
                 {
                     switch (settings.ProjectConflictResolution)
@@ -65,6 +66,7 @@ namespace SlnMerge.Persistence
                             overlaySln.RemoveProject(proj);
                             break;
                         case ProjectConflictResolution.PreserveAll:
+                            throw new InvalidOperationException($"The project '{proj.FilePath}' conflicts with an existing project in the base solution.");
                             break;
                     }
                 }
@@ -82,6 +84,7 @@ namespace SlnMerge.Persistence
             }
 
             // Merge overlay into base
+            var depsByProject = new Dictionary<SolutionProjectModel, List<string>>();
             foreach (var item in overlaySln.SolutionItems)
             {
                 if (item is SolutionFolderModel overlayFolder)
@@ -117,13 +120,32 @@ namespace SlnMerge.Persistence
                     // Copy all project configuration
                     foreach (var overlayDep in overlayProject.Dependencies ?? Array.Empty<SolutionProjectModel>())
                     {
-                        var baseDep = baseSln.SolutionProjects.FirstOrDefault(x => x.FilePath == overlayDep.FilePath);
-                        project.AddDependency(baseDep);
+                        if (!depsByProject.TryGetValue(project, out var deps))
+                        {
+                            deps = new List<string>();
+                            depsByProject[project] = deps;
+                        }
+                        //var baseDep = baseSln.SolutionProjects.FirstOrDefault(x => x.FilePath == overlayDep.FilePath);
+                        //project.AddDependency(baseDep);
+                        deps.Add(overlayDep.FilePath);
                     }
                     foreach (var overlayConfigRule in overlayProject.ProjectConfigurationRules ?? Array.Empty<ConfigurationRule>())
                     {
                         project.AddProjectConfigurationRule(overlayConfigRule);
                     }
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+            // Update dependencies after all projects are added
+            foreach (var (project, deps) in depsByProject)
+            {
+                foreach (var dep in deps)
+                {
+                    var projectInBase = baseSln.SolutionProjects.First(x => x.FilePath == dep);
+                    project.AddDependency(projectInBase);
                 }
             }
 
@@ -142,27 +164,24 @@ namespace SlnMerge.Persistence
                 }
             }
 
-            //// Add or move projects into solution folders
-            //var detachedProjects = new List<(SlnMergeSettings.NestedProject NestedSetting, ProjectElement[] Projects)>();
-            //foreach (var nested in settings.NestedProjects)
-            //{
-            //    detachedProjects.Add((nested, DetachProjectsFromFolders(nested.ProjectName, slnxBase.Root)));
-            //}
-
-            //foreach (var (nested, projects) in detachedProjects)
-            //{
-            //    if (slnxBase.Root.Folders.TryGetValue(NormalizeSolutionFolderPath(nested.FolderPath), out var folderElement))
-            //    {
-            //        foreach (var proj in projects)
-            //        {
-            //            slnxBase.Root.AddProject(proj, folderElement);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        throw new InvalidOperationException($"The folder '{nested.FolderPath}' specified as the nesting destination for the project '{nested.ProjectName}' does not exist.");
-            //    }
-            //}
+            // Add or move projects into solution folders
+            foreach (var nested in settings.NestedProjects)
+            {
+                var nestedProjectNamePattern = new Regex($"^{Regex.Escape(nested.ProjectName).Replace(@"\*", ".*").Replace(@"\?", ".")}$");
+                var matchedProj = baseSln.SolutionProjects.FirstOrDefault(x => nestedProjectNamePattern.IsMatch(x.ActualDisplayName));
+                if (matchedProj is not null)
+                {
+                    var destFolder = baseSln.FindFolder(NormalizeSolutionFolderPath(nested.FolderPath));
+                    if (destFolder is not null)
+                    {
+                        matchedProj.MoveToFolder(destFolder);
+                    }
+                    else
+                    {
+                        logger.Warn($"The destination folder '{nested.FolderPath}' was not found. (NestedProject: {nested.ProjectName}; MatchedProject: {matchedProj.ActualDisplayName})");
+                    }
+                }
+            }
 
             baseSln.DistillProjectConfigurations();
         }
