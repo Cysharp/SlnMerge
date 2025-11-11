@@ -1,6 +1,9 @@
 name: Update pre-built libraries
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/slnx2
 
 jobs:
   build-vs-solution-persistence:
