@@ -6,9 +6,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using SlnMerge.Legacy;
 using SlnMerge.Persistence;
-using SlnMerge.Xml;
 
 namespace SlnMerge
 {

@@ -3,7 +3,6 @@
 
 using Microsoft.VisualStudio.SolutionPersistence.Model;
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
-using SlnMerge.Xml;
 using System;
 using System.Collections.Generic;
 using System.IO;
