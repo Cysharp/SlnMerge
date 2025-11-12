@@ -1,0 +1,30 @@
+name: Update pre-built libraries
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'external/**'
+
+jobs:
+  build-vs-solution-persistence:
+    name: Build and Update SlnMerge.M.V.SolutionPersistence
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: Cysharp/Actions/.github/actions/checkout@main
+        with:
+          submodules: true
+      - uses: Cysharp/Actions/.github/actions/setup-dotnet@main
+      - name: Run dotnet publish
+        run: dotnet publish
+      - name: Copy built DLL to src/Editor
+        run: cp -f artifacts/publish/SlnMerge.Microsoft.VisualStudio.SolutionPersistence/release/SlnMerge.Microsoft.VisualStudio.SolutionPersistence.dll src/Editor/
+      - name: Commit and push
+        run: |
+          git status -s
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -m "Update pre-built libraries" src/Editor/*.dll
+          git push origin ${{ github.ref_name }}

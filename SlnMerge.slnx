@@ -2,11 +2,18 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".github/workflows/build-test.yml" />
+    <File Path=".github\workflows\build-debug.yaml" />
+    <File Path=".github\workflows\build-release.yaml" />
+    <File Path=".github\workflows\update-prebuilt.yaml" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="README.ja.md" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="external/SlnMerge.Weavers.Internalize/SlnMerge.Weavers.Internalize.csproj" Id="c5713408-7284-4d34-a434-922a8e6fed4b" />
+  <Project Path="external/vs-solutionpersistence-private/SlnMerge.Microsoft.VisualStudio.SolutionPersistence.csproj">
+    <BuildDependency Project="external/SlnMerge.Weavers.Internalize/SlnMerge.Weavers.Internalize.csproj" />
+  </Project>
   <Project Path="src/SlnMerge.Core.csproj" />
   <Project Path="test/SlnMerge.Tests/SlnMerge.Tests.csproj" />
 </Solution>

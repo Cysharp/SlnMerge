@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Microsoft.VisualStudio.SolutionPersistence</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefineConstants>$(DefineConstants);NETFRAMEWORK</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\vs-solutionpersistence\src\Microsoft.VisualStudio.SolutionPersistence\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fody" Version="6.9.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="PolySharp" Version="1.15.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <WeaverFiles Include="$(SolutionDir)artifacts\bin\SlnMerge.Weavers.Internalize\$(ArtifactsPivots)\SlnMerge.Weavers.Internalize.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="..\vs-solutionpersistence\src\Microsoft.VisualStudio.SolutionPersistence\Errors.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>..\vs-solutionpersistence\src\Microsoft.VisualStudio.SolutionPersistence\Errors.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\vs-solutionpersistence\src\Microsoft.VisualStudio.SolutionPersistence\Errors.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Errors.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.VisualStudio.SolutionPersistence</CustomToolNamespace>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SlnMerge.Core" />
+    <InternalsVisibleTo Include="SlnMerge.Editor" />
+    <InternalsVisibleTo Include="SlnMerge.Tests" />
+  </ItemGroup>
+</Project>

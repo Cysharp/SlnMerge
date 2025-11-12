@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
@@ -10,9 +10,14 @@
 
   <ItemGroup>
     <None Remove="**/*.meta" />
+    <None Remove="Editor\SlnMerge.Microsoft.VisualStudio.SolutionPersistence.dll" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="SlnMerge.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\external\vs-solutionpersistence-private\SlnMerge.Microsoft.VisualStudio.SolutionPersistence.csproj" />
   </ItemGroup>
 </Project>
