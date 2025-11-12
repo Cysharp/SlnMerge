@@ -1,4 +1,4 @@
-// Copyright © Cysharp, Inc. All rights reserved.
+﻿// Copyright © Cysharp, Inc. All rights reserved.
 // This source code is licensed under the MIT License. See details at https://github.com/Cysharp/SlnMerge.
 
 using System;
@@ -14,7 +14,6 @@ namespace SlnMerge
         public SolutionFolder[] SolutionFolders { get; set; } = Array.Empty<SolutionFolder>();
         public NestedProject[] NestedProjects { get; set; } = Array.Empty<NestedProject>();
         public ProjectConflictResolution ProjectConflictResolution { get; set; }
-        public ProjectMergeBehavior ProjectMergeBehavior { get; set; }
 
         public string? MergeTargetSolution { get; set; }
 
@@ -42,10 +41,6 @@ namespace SlnMerge
     public enum ProjectConflictResolution
     {
         /// <summary>
-        /// Preseve All projects.
-        /// </summary>
-        PreserveAll,
-        /// <summary>
         /// Preserve Unity generated project.
         /// </summary>
         PreserveUnity,
@@ -53,17 +48,9 @@ namespace SlnMerge
         /// Preserve Overlay original project.
         /// </summary>
         PreserveOverlay,
-    }
-
-    [Flags]
-    public enum ProjectMergeBehavior
-    {
-        None,
-
         /// <summary>
-        /// Throw an exception if the project or solution foler does not exist.
+        /// Preseve All projects.
         /// </summary>
-        ErrorIfProjectOrFolderDoesNotExist = 1 << 0,
+        PreserveAll,
     }
-
 }
