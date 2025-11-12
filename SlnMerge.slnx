@@ -2,6 +2,9 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path=".github/workflows/build-test.yml" />
+    <File Path=".github\workflows\build-debug.yaml" />
+    <File Path=".github\workflows\build-release.yaml" />
+    <File Path=".github\workflows\update-prebuilt.yaml" />
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="README.ja.md" />
