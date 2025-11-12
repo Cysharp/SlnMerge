@@ -59,7 +59,9 @@ For example, when the project name is `MyUnityApp`, Unity Editor generates `MyUn
 
 You can specify the target solution to merge by `MergeTargetSolution` element.
 
-**NOTE:** If you don't have the settings, SlnMerge uses `ProjectName.Merge.sln` as a target.
+> [!NOTE]
+> If the `MergeTargetSolution` element does not exist, the file `ProjectName.Merge.sln` will be loaded.
+> If the `MergeTargetSolution` element exists but its content is empty, it will implicitly merge with an empty solution. This is useful when you only want to use the folder organization feature.
 
 ## Settings
 
