@@ -1,4 +1,4 @@
-﻿// Copyright © Cysharp, Inc. All rights reserved.
+// Copyright © Cysharp, Inc. All rights reserved.
 // This source code is licensed under the MIT License. See details at https://github.com/Cysharp/SlnMerge.
 
 using System;
@@ -22,15 +22,11 @@ namespace SlnMerge
         public class SolutionFolder
         {
             [XmlAttribute] public string FolderPath { get; set; } = default!;
-
-            [XmlAttribute] public string? Guid { get; set; }
         }
 
         public class NestedProject
         {
             [XmlAttribute] public string ProjectName { get; set; } = default!;
-            [XmlAttribute] public string? ProjectGuid { get; set; }
-            [XmlAttribute] public string? FolderGuid { get; set; }
             [XmlAttribute] public string FolderPath { get; set; } = default!;
         }
 
