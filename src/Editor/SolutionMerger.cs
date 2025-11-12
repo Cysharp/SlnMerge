@@ -194,17 +194,17 @@ namespace SlnMerge
             {
                 var nestedProjectNamePattern = new Regex($"^{Regex.Escape(nested.ProjectName).Replace(@"\*", ".*").Replace(@"\?", ".")}$");
                 var matchedProjects = baseSln.SolutionProjects.Where(x => nestedProjectNamePattern.IsMatch(x.ActualDisplayName));
-                var destFolder = baseSln.FindFolder(NormalizeSolutionFolderPath(nested.FolderPath));
+                var normalizedFolderPath = NormalizeSolutionFolderPath(nested.FolderPath);
+                var destFolder = baseSln.FindFolder(normalizedFolderPath);
+                if (destFolder is null)
+                {
+                    logger.Debug($"The destination folder '{nested.FolderPath}' was not found. (NestedProject: {nested.ProjectName})");
+                    destFolder = baseSln.AddFolder(normalizedFolderPath);
+                }
+
                 foreach (var matchedProject in matchedProjects)
                 {
-                    if (destFolder is not null)
-                    {
-                        matchedProject.MoveToFolder(destFolder);
-                    }
-                    else
-                    {
-                        logger.Warn($"The destination folder '{nested.FolderPath}' was not found. (NestedProject: {nested.ProjectName}; MatchedProject: {matchedProject.ActualDisplayName})");
-                    }
+                    matchedProject.MoveToFolder(destFolder);
                 }
             }
 

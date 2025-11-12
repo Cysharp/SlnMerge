@@ -997,6 +997,53 @@ public class SolutionMergerTest
         var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
     }
 
+    [Fact]
+    public void Merge_SolutionFolder_NestedFolder_CreateFolderImplicitly()
+    {
+        // Arrange
+        var slnxBaseXml = """
+                          <Solution>
+                            <Project Path="Assembly-CSharp.csproj" />
+                            <Project Path="Assembly-CSharp-Editor.csproj" />
+                            <Project Path="MyApp.Client.csproj" />
+                          </Solution>
+                          """;
+        var slnxOverlayXml = """
+                             <Solution>
+                               <Project Path="src/MyApp.Server/MyApp.Server.csproj" />
+                               <Project Path="src/MyApp.Shared/MyApp.Shared.csproj" />
+                             </Solution>
+                             """;
+
+        var slnxBasePath = @"C:\repos\src\Client\Base.slnx".ToCurrentPlatformPathForm();
+        var slnxOverlayPath = @"C:\repos\src\Overlay.slnx".ToCurrentPlatformPathForm();
+        var slnxBase = CreateSolutionModelFromSlnx(slnxBaseXml);
+        var slnxOverlay = CreateSolutionModelFromSlnx(slnxOverlayXml);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [new() { ProjectName = "MyApp.*", FolderPath = "src" }, new() { ProjectName = "Assembly-CSharp*", FolderPath = "src" }],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+
+        // Act
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+
+        // Assert
+        var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
+        Assert.Equal("""
+                     <Solution>
+                       <Folder Name="/src/">
+                         <Project Path="../src/MyApp.Server/MyApp.Server.csproj" />
+                         <Project Path="../src/MyApp.Shared/MyApp.Shared.csproj" />
+                         <Project Path="Assembly-CSharp-Editor.csproj" />
+                         <Project Path="Assembly-CSharp.csproj" />
+                         <Project Path="MyApp.Client.csproj" />
+                       </Folder>
+                     </Solution>
+                     """, mergedSlnx);
+    }
 
     [Fact]
     public void Merge_SolutionFolder_NestedFolder_Wildcard()
