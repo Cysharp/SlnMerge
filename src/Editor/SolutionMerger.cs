@@ -16,14 +16,14 @@ namespace SlnMerge
 {
     internal class SolutionMerger
     {
-        public static bool TryMerge(string solutionFilePath, string solutionFileContent, string overlaySolutionFilePath, SlnMergeSettings slnMergeSettings, ISlnMergeLogger logger, out string? resultSolutionContent)
+        public static bool TryMerge(string solutionFilePath, string solutionFileContent, string overlaySolutionFilePath, string overlaySolutionFileContent, SlnMergeSettings slnMergeSettings, ISlnMergeLogger logger, out string? resultSolutionContent)
         {
             try
             {
                 var baseSlnSerializer = SolutionSerializers.GetSerializerByMoniker(solutionFilePath)!;
                 var overlaySlnSerializer = SolutionSerializers.GetSerializerByMoniker(overlaySolutionFilePath)!;
                 var baseSln = ReadSolutionFromString(solutionFileContent, solutionFilePath);
-                var overlaySln = ReadSolutionFromPath(overlaySolutionFilePath);
+                var overlaySln = ReadSolutionFromString(overlaySolutionFileContent, overlaySolutionFilePath);
                 MergeTo(baseSln, solutionFilePath, overlaySln, overlaySolutionFilePath, slnMergeSettings, logger);
 
                 Func<Stream, SolutionModel, CancellationToken, Task> saveAsyncFunc =

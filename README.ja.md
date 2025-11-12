@@ -56,7 +56,9 @@ Unity によって生成されるソリューションファイル名に .merges
 </SlnMergeSettings>
 ```
 
-**メモ:** ファイルが未指定の場合には `プロジェクト名.Merge.sln` が読み込まれます
+> [!NOTE]
+> `MergeTargetSolution` 要素が存在しない場合ファイルには `プロジェクト名.Merge.sln` が読み込まれます。
+> `MergeTargetSolution` 要素が存在し、要素の内容が空の場合には暗黙的に空のソリューションとマージされます。これはフォルダー分けの機能のみを使用したい場合に役立ちます。
 
 ## 設定
 mergesettings ファイルには次の設定項目があります。
