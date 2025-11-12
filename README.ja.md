@@ -48,8 +48,7 @@ Unity によって生成されるソリューションファイル名に .merges
 例えば MyUnityApp プロジェクトの場合は MyUnityApp.sln が生成されるので MyUnityApp.sln.mergesettings ファイルを作成します。
 
 > [!NOTE]
-> `.slnx` フォーマットを使用している場合には以降の `.sln` は `.slnx` と読み替えてください。
-> ソリューションファイルのマージは同形式のフォーマットでのみ行えます。SlnMerge は `.sln` に `.slnx` をマージできません。
+> `.slnx` フォーマットを使用している場合には以降の `.sln` は `.slnx` と読み替えてください。`.sln` が指定されている場合、`.slnx` をフォールバック対象として取り扱います。
 
 ```xml
 <SlnMergeSettings>
@@ -65,26 +64,20 @@ mergesettings ファイルには次の設定項目があります。
 - `Disabled`: SlnMerge を無効にするかどうか (デフォルト: `false`)
 - `MergeTargetSolution`: マージしたいソリューションのパス
 - `NestedProjects`: ネストするプロジェクトを指定します。通常ソリューションフォルダーとして利用します
-    - `NestedProject/FolderPath`: ソリューション上のフォルダーパス (存在しない場合は生成。GUIDと排他)
-    - `NestedProject/FolderGuid`: ソリューション上のフォルダーのGUID (パスと排他)
-    - `NestedProject/ProjectName`: プロジェクト名 (GUIDと排他)
+    - `NestedProject/FolderPath`: ソリューション上のフォルダーパス (存在しない場合は生成)
+    - `NestedProject/ProjectName`: プロジェクト名
         - ワイルドカードが使用可能です (`?`, `*`)
-    - `NestedProject/ProjectGuid`: プロジェクトGUID (プロジェクト名と排他)
-- `ProjectConflictResolution`: マージ元とマージ先でソリューション内に同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
+- `ProjectConflictResolution`: マージ元とマージ先でソリューション内に同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`) (デフォルト: `PreserveUnity`)
     - `PreserveAll`: すべてのプロジェクトを残します (Unity とマージ対象のソリューションのプロジェクトの両方)
     - `PreserveUnity`: Unity が生成したソリューションのプロジェクトを残します (マージ対象のソリューションのプロジェクトを破棄)
     - `PreserveOverlay`: 上書きするソリューションのプロジェクトを残します (Unity が生成したソリューションのプロジェクトを破棄)
 
 ### ソリューションフォルダーに追加する
-`NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。ベースのソリューションにソリューションフォルダーが存在しない場合には自動で追加しますが、ソリューションフォルダーの定義が設定ファイルに必要です。
+`NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。ベースのソリューションにソリューションフォルダーが存在しない場合には自動で追加します。
 
 ```xml
 <SlnMergeSettings>
     <MergeTargetSolution>..\ChatApp.Server.sln</MergeTargetSolution>
-    <SolutionFolders>
-        <!-- Unity という名前のソリューションフォルダーを GUID とともに定義する -->
-        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}"/>
-    </SolutionFolders>
     <NestedProjects>
         <NestedProject ProjectName="Assembly-CSharp" FolderPath="Unity" />
         <NestedProject ProjectName="Assembly-CSharp-Editor" FolderPath="Unity" />
@@ -100,9 +93,9 @@ mergesettings ファイルには次の設定項目があります。
 
 マージ対象のプロジェクトと Unity が生成するソリューションで同名のプロジェクトが存在する場合、`ProjectConflictResolution` オプションを使用して3つの方法でコンフリクトを解決できます。
 
-- すべてのプロジェクトを維持 (デフォルト)
+- すべてのプロジェクトを維持
 - マージ対象のソリューションのプロジェクトを維持
-- Unity が生成したソリューションのプロジェクトを維持
+- Unity が生成したソリューションのプロジェクトを維持 (デフォルト)
 
 ## ライセンス
 MIT License

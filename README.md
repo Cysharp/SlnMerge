@@ -49,8 +49,7 @@ Create a setting XML file named `<ProjectName>.sln.mergesettings`.
 For example, when the project name is `MyUnityApp`, Unity Editor generates `MyUnityApp.sln`. You need to create `MyUnityApp.sln.mergesettings`.
 
 > [!NOTE]
-> If you are using `.slnx` format, please read `.sln` as `.slnx` below.
-> Solution files can only be merged in the same format. SlnMerge cannot merge `.slnx` file into `.sln` file.
+> If you are using `.slnx` format, please read `.sln` as `.slnx` below. If `.sln` is specified, `.slnx` is treated as a fallback target.
 
 ```xml
 <SlnMergeSettings>
@@ -69,27 +68,21 @@ The mergesettings file has the following settings:
 - `Disabled`: Disable SlnMerge (default:` false`)
 - `MergeTargetSolution`: Path of the solution you want to merge
 - `NestedProjects`: Specify the projects to nest. Usually used as a solution folder
-    - `NestedProject/FolderPath`: Folder path on solution (created if it doesn't exist; mutally exclusive with FolderGuid)
-    - `NestedProject/FolderGuid`: GUID of folder on solution (mutally exclusive with FolderPath)
-    - `NestedProject/ProjectName`: Project name (mutally exclusive with ProjectGuid)
+    - `NestedProject/FolderPath`: Folder path on solution (created if it doesn't exist)
+    - `NestedProject/ProjectName`: Project name
         - Wildcard is available (`?`, `*`)
-    - `NestedProject/ProjectGuid`: Project GUID (mutally exclusive with ProjectName)
-- `ProjectConflictResolution`: Processing strategy when a solution contains a project with the same name (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`)
+- `ProjectConflictResolution`: Processing strategy when a solution contains a project with the same name (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`) (default: `PreserveUnity`)
     - `PreserveAll`: Preserve all projects (both Unity generated projects and original projects)
     - `PreserveUnity`: Preserve Unity generated projects. (discard original project in a overlay solution)
     - `PreserveOverlay`: Preserve original projects in a overlay solution. (discard Unity generated projects from a merged solution)
 
 ### Add projects to solution folders
 You can use `NestedProjects` settings to move projects to solution folders.
-When a solution folder doesn't exist, SlnMerge will add the solution folder to the solution automatically. But, you need to define a solution folder as `SolutionFolder` in mergesettings.
+When a solution folder doesn't exist, SlnMerge will add the solution folder to the solution automatically.
 
 ```xml
 <SlnMergeSettings>
     <MergeTargetSolution>..\ChatApp.Server.sln</MergeTargetSolution>
-    <SolutionFolders>
-        <!-- Define a solution folder named 'Unity' with GUID -->
-        <SolutionFolder FolderPath="Unity" Guid="{55739033-89BA-48AE-B482-843AFD452468}"/>
-    </SolutionFolders>
     <NestedProjects>
         <NestedProject ProjectName="Assembly-CSharp" FolderPath="Unity" />
         <NestedProject ProjectName="Assembly-CSharp-Editor" FolderPath="Unity" />
@@ -105,9 +98,9 @@ When a solution folder doesn't exist, SlnMerge will add the solution folder to t
 
 If a merge target solution has a project with the same name in the Unity generated solution, you can use use `ProjectConflictResolution` option to fix the conflict in a 3-way.
 
-1. Preserve all projects (by default)
+1. Preserve all projects
 2. Preserve the project in the merge target solution
-3. Preserve the project in the Unity generated solution
+3. Preserve the project in the Unity generated solution (by default)
 
 ## License
 MIT License
