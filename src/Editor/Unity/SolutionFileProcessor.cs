@@ -1,16 +1,15 @@
 ﻿// Copyright © Cysharp, Inc. All rights reserved.
 // This source code is licensed under the MIT License. See details at https://github.com/Cysharp/SlnMerge.
 
-#if UNITY_EDITOR
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using UnityEditor;
+using UnityEngine;
+
 namespace SlnMerge.Unity
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using System.Reflection;
-    using UnityEditor;
-    using UnityEngine;
-
     [InitializeOnLoad]
     public class SolutionFileProcessor : AssetPostprocessor
     {
@@ -66,7 +65,26 @@ namespace SlnMerge.Unity
 
         private static string Merge(string path, string content)
         {
-            if (SlnMerge.TryMerge(path, content, SlnMergeUnityLogger.Instance, out var solutionContent))
+            var logger = SlnMergeUnityLogger.Instance;
+            var mergeSettingsCustomLocation = SlnMergeUserSettings.Instance.MergeSettingsCustomLocation;
+
+            if (SlnMergeSettings.TryLoad(path, mergeSettingsCustomLocation, out var finalSlnMergeSettingsPath, out var slnMergeSettings))
+            {
+                logger.Debug($"Using SlnMerge Settings: {finalSlnMergeSettingsPath}");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(mergeSettingsCustomLocation))
+                {
+                    logger.Debug($"No SlnMerge settings found.");
+                }
+                else
+                {
+                    logger.Warn($"Specified SlnMerge settings was not found at: {mergeSettingsCustomLocation}");
+                }
+            }
+
+            if (SlnMerge.TryMerge(path, content, slnMergeSettings, logger, out var solutionContent))
             {
                 return solutionContent;
             }
@@ -101,11 +119,11 @@ namespace SlnMerge.Unity
 
             public void Debug(string message)
             {
-#if SLNMERGE_DEBUG
-                UnityEngine.Debug.Log($"[SlnMerge] {message}");
-#endif
+                if (SlnMergeUserSettings.Instance.VerboseLogging)
+                {
+                    UnityEngine.Debug.Log($"[SlnMerge] {message}");
+                }
             }
         }
     }
 }
-#endif

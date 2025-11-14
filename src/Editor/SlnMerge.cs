@@ -13,34 +13,30 @@ namespace SlnMerge
     {
         public static bool TryMerge(string solutionFilePath, string solutionFileContent, ISlnMergeLogger logger, [NotNullWhen(true)] out string? resultSolutionContent)
         {
+            // Load SlnMerge settings from .mergesettings
+            var slnFileDirectory = Path.GetDirectoryName(solutionFilePath);
+            if (SlnMergeSettings.TryLoadBySolutionPath(solutionFilePath, out var slnMergeSettingsPath, out var slnMergeSettings))
+            {
+                logger.Debug($"Using SlnMerge Settings: {slnMergeSettingsPath}");
+            }
+            else
+            {
+                logger.Debug($"No SlnMerge settings found.");
+            }
+
+            return TryMerge(solutionFilePath, solutionFileContent, slnMergeSettings, logger, out resultSolutionContent);
+        }
+
+        public static bool TryMerge(string solutionFilePath, string solutionFileContent, SlnMergeSettings? slnMergeSettings, ISlnMergeLogger logger, [NotNullWhen(true)] out string? resultSolutionContent)
+        {
             logger.Debug(solutionFileContent);
             try
             {
                 var solutionName = Path.GetFileNameWithoutExtension(solutionFilePath);
                 var isSlnx = Path.GetExtension(solutionFilePath) == ".slnx";
-
-                // Load SlnMerge settings from .mergesttings
                 var slnFileDirectory = Path.GetDirectoryName(solutionFilePath);
-                var slnMergeSettings = new SlnMergeSettings();
-                var slnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "slnx" : "sln")}.mergesettings");
-                var alternativeSlnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "sln" : "slnx")}.mergesettings");
 
-                if (File.Exists(slnMergeSettingsPath))
-                {
-                    logger.Debug($"Using SlnMerge Settings: {slnMergeSettingsPath}");
-                    slnMergeSettings = SlnMergeSettings.FromFile(slnMergeSettingsPath);
-                }
-                else if (File.Exists(alternativeSlnMergeSettingsPath))
-                {
-                    logger.Debug($"Using SlnMerge Settings: {alternativeSlnMergeSettingsPath}");
-                    slnMergeSettings = SlnMergeSettings.FromFile(alternativeSlnMergeSettingsPath);
-                }
-                else
-                {
-                    logger.Debug($"SlnMerge Settings (Not found): {slnMergeSettingsPath} or {alternativeSlnMergeSettingsPath}");
-                }
-
-                if (slnMergeSettings.Disabled)
+                if (slnMergeSettings is null || slnMergeSettings.Disabled)
                 {
                     logger.Debug("SlnMerge is currently disabled.");
                     resultSolutionContent = solutionFileContent;
