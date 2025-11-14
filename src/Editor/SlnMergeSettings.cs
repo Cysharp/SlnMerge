@@ -30,6 +30,12 @@ namespace SlnMerge
             [XmlAttribute] public string FolderPath { get; set; } = default!;
         }
 
+        public void Save(string path)
+        {
+            using var stream = File.Create(path);
+            new XmlSerializer(typeof(SlnMergeSettings)).Serialize(stream, this);
+        }
+
         public static bool TryLoad(string solutionFilePath, string? slnMergeSettingsPath, [NotNullWhen(true)] out string? finalSlnMergeSettingsPath, [NotNullWhen(true)] out SlnMergeSettings? settings)
         {
             if (string.IsNullOrWhiteSpace(slnMergeSettingsPath))
@@ -55,37 +61,60 @@ namespace SlnMerge
 
         public static bool TryLoadBySolutionPath(string solutionFilePath, [NotNullWhen(true)] out string? loadedSlnMergeSettingsPath, [NotNullWhen(true)] out SlnMergeSettings? settings)
         {
-            var solutionName = Path.GetFileNameWithoutExtension(solutionFilePath);
-            var isSlnx = Path.GetExtension(solutionFilePath) == ".slnx";
-
-            // Load SlnMerge settings from .mergesttings
-            var slnFileDirectory = Path.GetDirectoryName(solutionFilePath)!;
-            var slnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "slnx" : "sln")}.mergesettings");
-            var alternativeSlnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "sln" : "slnx")}.mergesettings");
-
-            if (File.Exists(slnMergeSettingsPath))
+            try
             {
-                loadedSlnMergeSettingsPath = slnMergeSettingsPath;
-                settings = SlnMergeSettings.FromFile(slnMergeSettingsPath);
+                var solutionName = Path.GetFileNameWithoutExtension(solutionFilePath);
+                var isSlnx = Path.GetExtension(solutionFilePath) == ".slnx";
+
+                // Load SlnMerge settings from .mergesttings
+                var slnFileDirectory = Path.GetDirectoryName(solutionFilePath)!;
+                var slnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "slnx" : "sln")}.mergesettings");
+                var alternativeSlnMergeSettingsPath = Path.Combine(slnFileDirectory, $"{solutionName}.{(isSlnx ? "sln" : "slnx")}.mergesettings");
+
+                if (File.Exists(slnMergeSettingsPath))
+                {
+                    loadedSlnMergeSettingsPath = slnMergeSettingsPath;
+                    settings = FromFile(slnMergeSettingsPath);
+                }
+                else if (File.Exists(alternativeSlnMergeSettingsPath))
+                {
+                    loadedSlnMergeSettingsPath = alternativeSlnMergeSettingsPath;
+                    settings = FromFile(alternativeSlnMergeSettingsPath);
+                }
+                else
+                {
+                    loadedSlnMergeSettingsPath = null;
+                    settings = null;
+                }
+
+                return settings != null;
             }
-            else if (File.Exists(alternativeSlnMergeSettingsPath))
-            {
-                loadedSlnMergeSettingsPath = alternativeSlnMergeSettingsPath;
-                settings = SlnMergeSettings.FromFile(alternativeSlnMergeSettingsPath);
-            }
-            else
+            catch
             {
                 loadedSlnMergeSettingsPath = null;
                 settings = null;
+                return false;
             }
-
-            return settings != null;
         }
 
         public static SlnMergeSettings FromFile(string path)
         {
             using var stream = File.OpenRead(path);
             return (SlnMergeSettings)new XmlSerializer(typeof(SlnMergeSettings)).Deserialize(stream);
+        }
+
+        public static bool TryLoadFromFile(string path, [NotNullWhen(true)] out SlnMergeSettings? settings)
+        {
+            try
+            {
+                settings = FromFile(path);
+                return true;
+            }
+            catch
+            {
+                settings = null;
+                return false;
+            }
         }
     }
 

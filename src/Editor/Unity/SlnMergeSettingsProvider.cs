@@ -33,10 +33,10 @@ namespace SlnMerge.Unity
         {
             using (new GUILayout.HorizontalScope())
             {
-                GUILayout.Space(16);
+                GUILayout.Space(8);
                 using (new GUILayout.VerticalScope())
                 {
-                    GUILayout.Space(16);
+                    GUILayout.Space(8);
                     OnGUICore(searchContext);
                 }
             }
@@ -68,12 +68,18 @@ namespace SlnMerge.Unity
             }
             else
             {
-                SlnMergeUserSettings.Instance.MergeSettingsCustomLocation = _mergeSettingsSelectionItems[selectedIndex ];
+                SlnMergeUserSettings.Instance.MergeSettingsCustomLocation = _mergeSettingsSelectionItems[selectedIndex];
             }
 
             SlnMergeUserSettings.Instance.VerboseLogging = EditorGUILayout.Toggle("Verbose Logging", SlnMergeUserSettings.Instance.VerboseLogging);
-        }
 
+            GUILayout.Space(32);
+
+            if (GUILayout.Button("Edit current merge settings"))
+            {
+                SlnMergeSettingsWindow.Open(SlnMergeUserSettings.Instance.MergeSettingsCustomLocation);
+            }
+        }
 
         private void UpdateMergeSettingsFilesSelectionItems()
         {
