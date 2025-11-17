@@ -31,6 +31,13 @@ namespace SlnMerge.Unity
             get => _verboseLogging;
             set => SetValue(ref _verboseLogging, value);
         }
+
+        [SerializeField] private ProcessingPolicyOverride _processingPolicyOverride = ProcessingPolicyOverride.Unspecified;
+        public ProcessingPolicyOverride ProcessingPolicyOverride
+        {
+            get => _processingPolicyOverride;
+            set => SetValue(ref _processingPolicyOverride, value);
+        }
         #endregion
 
         private static SlnMergeUserSettings LoadOrNew()

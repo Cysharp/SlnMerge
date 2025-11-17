@@ -84,7 +84,7 @@ namespace SlnMerge.Unity
                 }
             }
 
-            if (SlnMerge.TryMerge(path, content, slnMergeSettings, logger, out var solutionContent))
+            if (SlnMerge.TryMerge(path, content, slnMergeSettings, SlnMergeUserSettings.Instance.ProcessingPolicyOverride,  logger, out var solutionContent))
             {
                 return solutionContent;
             }

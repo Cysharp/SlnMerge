@@ -71,14 +71,20 @@ namespace SlnMerge.Unity
                 SlnMergeUserSettings.Instance.MergeSettingsCustomLocation = _mergeSettingsSelectionItems[selectedIndex];
             }
 
-            SlnMergeUserSettings.Instance.VerboseLogging = EditorGUILayout.Toggle("Verbose Logging", SlnMergeUserSettings.Instance.VerboseLogging);
+            SlnMergeUserSettings.Instance.ProcessingPolicyOverride = (ProcessingPolicyOverride)EditorGUILayout.EnumPopup("Processing Policy Override", SlnMergeUserSettings.Instance.ProcessingPolicyOverride);
+            EditorGUILayout.LabelField(" ", SlnMergeUserSettings.Instance.ProcessingPolicyOverride.GetDescription());
+            GUILayout.Space(8);
 
+            SlnMergeUserSettings.Instance.VerboseLogging = EditorGUILayout.Toggle("Verbose Logging", SlnMergeUserSettings.Instance.VerboseLogging);
             GUILayout.Space(32);
 
             if (GUILayout.Button("Edit current merge settings"))
             {
                 SlnMergeSettingsWindow.Open(SlnMergeUserSettings.Instance.MergeSettingsCustomLocation);
             }
+
+            GUILayout.Space(8);
+            EditorGUILayout.HelpBox("To regenerate the solution, open 'External Tools' and click the 'Regenerate project files' button.", MessageType.Info);
         }
 
         private void UpdateMergeSettingsFilesSelectionItems()

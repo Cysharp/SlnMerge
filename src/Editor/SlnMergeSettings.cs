@@ -15,6 +15,7 @@ namespace SlnMerge
         public SolutionFolder[] SolutionFolders { get; set; } = Array.Empty<SolutionFolder>();
         public NestedProject[] NestedProjects { get; set; } = Array.Empty<NestedProject>();
         public ProjectConflictResolution ProjectConflictResolution { get; set; }
+        public ProcessingPolicy DefaultProcessingPolicy { get; set; } = ProcessingPolicy.Merge;
 
         public string? MergeTargetSolution { get; set; }
 
@@ -129,8 +130,65 @@ namespace SlnMerge
         /// </summary>
         PreserveOverlay,
         /// <summary>
-        /// Preseve All projects.
+        /// Preserve All projects.
         /// </summary>
         PreserveAll,
+    }
+
+    public enum ProcessingPolicy
+    {
+        /// <summary>
+        /// Merge solutions
+        /// </summary>
+        Merge,
+        /// <summary>
+        /// Only process nested projects.
+        /// </summary>
+        NestedProjectOnly,
+        /// <summary>
+        /// Disable SlnMerge processing.
+        /// </summary>
+        Disabled,
+    }
+
+    public enum ProcessingPolicyOverride
+    {
+        /// <summary>
+        /// Merge solutions
+        /// </summary>
+        Merge,
+        /// <summary>
+        /// Only process nested projects.
+        /// </summary>
+        NestedProjectOnly,
+        /// <summary>
+        /// Disable SlnMerge processing.
+        /// </summary>
+        Disabled,
+
+        /// <summary>
+        /// Unspecified processing policy.
+        /// </summary>
+        Unspecified,
+    }
+
+    public static class ProcessingPolicyExtensions
+    {
+        public static string GetDescription(this ProcessingPolicy policy) => policy switch
+        {
+            ProcessingPolicy.Merge => "The solution will be merged by default.",
+            ProcessingPolicy.NestedProjectOnly => "Only the settings for nested projects will be applied, and the solution will not be merged.",
+            ProcessingPolicy.Disabled => "Merging and other settings application are disabled by default.",
+            _ => string.Empty,
+        };
+
+        public static string GetDescription(this ProcessingPolicyOverride policy) => policy switch
+        {
+            ProcessingPolicyOverride.Merge => "The solution will be merged.",
+            ProcessingPolicyOverride.NestedProjectOnly => "Only the settings for nested projects will be applied, and the solution will not be merged.",
+            ProcessingPolicyOverride.Disabled => "Merging and other settings application are disabled.",
+            ProcessingPolicyOverride.Unspecified => "Follow the project's default merge settings",
+            _ => string.Empty,
+        };
     }
 }

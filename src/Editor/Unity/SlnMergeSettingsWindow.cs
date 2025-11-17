@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -112,9 +113,17 @@ namespace SlnMerge.Unity
             GUILayout.Space(8);
             GUILayout.Label("Nested Projects");
             _nestedProjects.DoLayoutList();
-            _context.ProjectConflictResolution = (ProjectConflictResolution)EditorGUILayout.EnumPopup("Conflict Resolution", _context.ProjectConflictResolution);
+            var isValid = IsValid();
+            if (!isValid)
+            {
+                EditorGUILayout.HelpBox("Some required fields are not filled.", MessageType.Error);
+            }
 
-            if (GUI.changed && IsValid())
+            _context.ProjectConflictResolution = (ProjectConflictResolution)EditorGUILayout.EnumPopup("Conflict Resolution", _context.ProjectConflictResolution);
+            _context.DefaultProcessingPolicy = (ProcessingPolicy)EditorGUILayout.EnumPopup("Default Processing Policy", _context.DefaultProcessingPolicy);
+            EditorGUILayout.LabelField(" ", _context.DefaultProcessingPolicy.GetDescription());
+
+            if (GUI.changed && isValid)
             {
                 _context.Save();
             }
@@ -132,6 +141,7 @@ namespace SlnMerge.Unity
             public List<NestedProject> NestedProjects = new();
             public string MergeTargetSolution = string.Empty;
             public ProjectConflictResolution ProjectConflictResolution;
+            public ProcessingPolicy DefaultProcessingPolicy;
 
             public void Load()
             {
@@ -145,21 +155,65 @@ namespace SlnMerge.Unity
                         FolderPath = x.FolderPath
                     }));
                     ProjectConflictResolution = settings.ProjectConflictResolution;
+                    DefaultProcessingPolicy = settings.DefaultProcessingPolicy;
                 }
             }
 
             public void Save()
             {
-                if (!SlnMergeSettings.TryLoadFromFile(Path, out var settings))
+                XDocument xDoc;
+                try
                 {
-                    settings = new SlnMergeSettings();
+                    using var reader = File.OpenRead(Path);
+                    xDoc = XDocument.Load(reader);
+                }
+                catch
+                {
+                    xDoc = new XDocument(new XElement("SlnMergeSettings"));
                 }
 
-                settings.MergeTargetSolution = MergeTargetSolution;
-                settings.NestedProjects = NestedProjects.Select(x => new SlnMergeSettings.NestedProject() { ProjectName = x.ProjectName, FolderPath = x.FolderPath }).ToArray();
-                settings.ProjectConflictResolution = ProjectConflictResolution;
+                ApplyChangeTo(xDoc, nameof(MergeTargetSolution), MergeTargetSolution);
+                ApplyChangeTo(xDoc, nameof(NestedProjects), nameof(NestedProject), NestedProjects,
+                    x => new XElement(nameof(NestedProject),
+                        new XAttribute(nameof(NestedProject.ProjectName), x.ProjectName),
+                        new XAttribute(nameof(NestedProject.FolderPath), x.FolderPath)));
+                ApplyChangeTo(xDoc, nameof(ProjectConflictResolution), ProjectConflictResolution);
+                ApplyChangeTo(xDoc, nameof(DefaultProcessingPolicy), DefaultProcessingPolicy);
 
-                settings.Save(Path);
+                using var stream = File.Create(Path);
+                xDoc.Save(stream);
+            }
+
+            private void ApplyChangeTo<T>(XDocument xDoc, string elementName, T newValue)
+            {
+                var element = xDoc.Root?.Element(elementName);
+                var serializedValue = newValue?.ToString() ?? string.Empty;
+                if (element == null)
+                {
+                    xDoc.Root!.Add(new XElement(elementName, serializedValue));
+                }
+                else
+                {
+                    if (element.Value != serializedValue)
+                    {
+                        element.Value = serializedValue;
+                    }
+                }
+            }
+
+            private void ApplyChangeTo<T>(XDocument xDoc, string elementName, string childElementName, IEnumerable<T> newValues, Func<T, XElement> childElementFactory)
+            {
+                var element = xDoc.Root?.Element(elementName);
+                if (element == null)
+                {
+                    element = new XElement(elementName);
+                    xDoc.Root!.Add(element);
+                }
+                else
+                {
+                    element.Elements(childElementName).Remove();
+                }
+                element.Add(newValues.Select(childElementFactory));
             }
         }
 
