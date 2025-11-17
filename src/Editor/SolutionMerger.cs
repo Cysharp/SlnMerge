@@ -93,65 +93,65 @@ namespace SlnMerge
                     continue;
                 }
                 baseSln.AddFolder(NormalizeSolutionFolderPath(folderBySetting.FolderPath));
+                logger.Debug($"Added solution folder: {NormalizeSolutionFolderPath(folderBySetting.FolderPath)}");
             }
 
-            // Merge overlay into base
-            var depsByProject = new Dictionary<SolutionProjectModel, List<string>>();
-            foreach (var item in overlaySln.SolutionItems)
+            logger.Debug($"BaseSln SolutionFolders: {string.Join("\n", baseSln.SolutionFolders.Select(x => $"{x.ActualDisplayName} ({x.Path})"))}");
+
+            // First, merge the solution folders in the overlay into the base
+            foreach (var overlayFolder in overlaySln.SolutionFolders)
             {
-                if (item is SolutionFolderModel overlayFolder)
+                var baseFolder = baseSln.FindFolder(overlayFolder.Path);
+                if (baseFolder is null)
                 {
-                    var baseFolder = baseSln.SolutionFolders.FirstOrDefault(x => string.Equals(x.Path, overlayFolder.Path, StringComparison.OrdinalIgnoreCase));
-                    if (baseFolder is null)
+                    baseFolder = baseSln.AddFolder(overlayFolder.Path);
+                    foreach (var prop in overlayFolder.Properties)
                     {
-                        baseFolder = baseSln.AddFolder(overlayFolder.Path);
-                        foreach (var prop in overlayFolder.Properties)
+                        var baseProp = baseFolder.AddProperties(prop.Id, prop.Scope);
+                        foreach (var (key, value) in prop)
                         {
-                            var baseProp = baseFolder.AddProperties(prop.Id, prop.Scope);
-                            foreach (var (key, value) in prop)
-                            {
-                                baseProp.Add(key, value);
-                            }
+                            baseProp.Add(key, value);
                         }
-                        baseFolder.Id = overlayFolder.Id;
                     }
-
-                    var files = overlayFolder.Files ?? Array.Empty<string>();
-                    foreach (var file in files)
-                    {
-                        baseFolder.AddFile(file);
-                    }
+                    baseFolder.Id = overlayFolder.Id;
                 }
-                else if (item is SolutionProjectModel overlayProject)
-                {
-                    var baseFolder = item.Parent != null
-                        ? baseSln.SolutionFolders.First(x => string.Equals(x.Path, item.Parent.Path, StringComparison.OrdinalIgnoreCase))
-                        : null;
 
-                    var project = baseSln.AddProject(overlayProject.FilePath, overlayProject.Type, baseFolder);
-                    // Copy all project configuration
-                    foreach (var overlayDep in overlayProject.Dependencies ?? Array.Empty<SolutionProjectModel>())
-                    {
-                        if (!depsByProject.TryGetValue(project, out var deps))
-                        {
-                            deps = new List<string>();
-                            depsByProject[project] = deps;
-                        }
-                        //var baseDep = baseSln.SolutionProjects.FirstOrDefault(x => x.FilePath == overlayDep.FilePath);
-                        //project.AddDependency(baseDep);
-                        deps.Add(overlayDep.FilePath);
-                    }
-                    foreach (var overlayConfigRule in overlayProject.ProjectConfigurationRules ?? Array.Empty<ConfigurationRule>())
-                    {
-                        project.AddProjectConfigurationRule(overlayConfigRule);
-                    }
-                }
-                else
+                var files = overlayFolder.Files ?? Array.Empty<string>();
+                foreach (var file in files)
                 {
-                    //throw new NotImplementedException();
-                    logger.Warn($"Unknown solution item type: {item.GetType().Name}");
+                    baseFolder.AddFile(file);
                 }
             }
+
+            // Merge overlay projects into base
+            var depsByProject = new Dictionary<SolutionProjectModel, List<string>>();
+            foreach (var overlayProject in overlaySln.SolutionProjects)
+            {
+                logger.Debug($"Overlay Project: {overlayProject.ActualDisplayName} (FilePath={overlayProject.FilePath}; Parent={overlayProject.Parent?.Path})");
+
+                var baseFolder = overlayProject.Parent != null
+                    ? baseSln.SolutionFolders.First(x => string.Equals(x.Path, overlayProject.Parent.Path, StringComparison.OrdinalIgnoreCase))
+                    : null;
+
+                var project = baseSln.AddProject(overlayProject.FilePath, overlayProject.Type, baseFolder);
+                // Copy all project configuration
+                foreach (var overlayDep in overlayProject.Dependencies ?? Array.Empty<SolutionProjectModel>())
+                {
+                    if (!depsByProject.TryGetValue(project, out var deps))
+                    {
+                        deps = new List<string>();
+                        depsByProject[project] = deps;
+                    }
+                    //var baseDep = baseSln.SolutionProjects.FirstOrDefault(x => x.FilePath == overlayDep.FilePath);
+                    //project.AddDependency(baseDep);
+                    deps.Add(overlayDep.FilePath);
+                }
+                foreach (var overlayConfigRule in overlayProject.ProjectConfigurationRules ?? Array.Empty<ConfigurationRule>())
+                {
+                    project.AddProjectConfigurationRule(overlayConfigRule);
+                }
+            }
+
             // Update dependencies after all projects are added
             foreach (var (project, deps) in depsByProject)
             {

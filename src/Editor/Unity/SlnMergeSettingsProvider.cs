@@ -84,7 +84,7 @@ namespace SlnMerge.Unity
             }
 
             GUILayout.Space(8);
-            EditorGUILayout.HelpBox("To regenerate the solution, open 'External Tools' and click the 'Regenerate project files' button.", MessageType.Info);
+            EditorGUILayout.HelpBox("To regenerate the solution, remove `.sln`/`.slnx` file, open 'External Tools' and click the 'Regenerate project files' button.", MessageType.Info);
         }
 
         private void UpdateMergeSettingsFilesSelectionItems()

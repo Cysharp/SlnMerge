@@ -5,11 +5,14 @@ using System.Text;
 using Microsoft.VisualStudio.SolutionPersistence.Model;
 using Microsoft.VisualStudio.SolutionPersistence.Serializer;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace SlnMerge.Tests;
 
-public class SolutionMergerTest
+public class SolutionMergerTest(ITestOutputHelper outputHelper)
 {
+    private readonly SlnMergeTestOutputLogger _logger = new(outputHelper);
+
     [Fact]
     public void Merge()
     {
@@ -66,7 +69,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -161,7 +164,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -225,7 +228,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnBase, slnBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnBase, slnBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnBase);
@@ -345,7 +348,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
@@ -444,7 +447,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnBase, slnBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnBase, slnBasePath, slnOverlay, slnOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnBase);
@@ -458,12 +461,12 @@ public class SolutionMergerTest
                      EndProject
                      Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp-Editor", "Assembly-CSharp-Editor.csproj", "{A94A546A-4413-A73D-F517-3C1A7CCFE662}"
                      EndProject
-                     Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nantoka.Server", "..\Nantoka.Server\Nantoka.Server.csproj", "{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}"
-                     EndProject
                      Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project Settings", "Project Settings", "{34006C71-946B-49BF-BBCB-BB091E5A3AE7}"
                      	ProjectSection(SolutionItems) = preProject
                      		..\..\Nantoka.Server\.gitignore = ..\..\Nantoka.Server\.gitignore
                      	EndProjectSection
+                     EndProject
+                     Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nantoka.Server", "..\Nantoka.Server\Nantoka.Server.csproj", "{79AD04D8-C13F-941A-C8A2-9C2763BC5F9B}"
                      EndProject
                      Global
                      	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -533,7 +536,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
 
         // Assert
@@ -594,7 +597,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -653,7 +656,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -711,7 +714,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -758,7 +761,7 @@ public class SolutionMergerTest
         };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
+        var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger));
     }
 
     [Fact]
@@ -790,7 +793,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -838,7 +841,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -891,7 +894,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -946,7 +949,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -994,7 +997,7 @@ public class SolutionMergerTest
         };
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance));
+        var ex = Assert.Throws<InvalidOperationException>(() => SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger));
     }
 
     [Fact]
@@ -1027,7 +1030,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1079,7 +1082,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1133,7 +1136,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1190,7 +1193,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1251,7 +1254,7 @@ public class SolutionMergerTest
         };
 
         // Act
-        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, SlnMergeNullLogger.Instance);
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnxOverlay, slnxOverlayPath, slnMergeSettings, _logger);
 
         // Assert
         var mergedSln = SerializeSolutionToSln(slnxBase);
@@ -1268,6 +1271,89 @@ public class SolutionMergerTest
                          <BuildType Solution="Publish|*" Project="Release" />
                        </Project>
                        <Project Path="../src/MyApp.Shared/MyApp.Shared.csproj" />
+                       <Project Path="MyApp.Client.csproj" />
+                     </Solution>
+                     """, mergedSlnx);
+    }
+
+    [Fact]
+    public void Merge_SolutionFolder_Sln_ItemOrder()
+    {
+        // Arrange
+        var slnxBaseXml = """
+                          <Solution>
+                            <Project Path="MyApp.Client.csproj" />
+                          </Solution>
+                          """;
+        // NOTE: In `.sln`, projects may be defined before solution folders.
+        var slnOverlaySln = """
+                             Microsoft Visual Studio Solution File, Format Version 12.00
+                             Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyApp.Server", "src\MyApp.Server\MyApp.Server.csproj", "{3A3E0043-9A70-D936-82A5-445F0CA81399}"
+                             EndProject
+                             Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyApp.Shared", "src\MyApp.Shared\MyApp.Shared.csproj", "{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}"
+                             EndProject
+                             Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "New Folder1", "New Folder1", "{EC16570D-B7EA-1C82-7ECB-77418AAD0BB4}"
+                             EndProject
+                             Global
+                             	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+                             		Debug|Any CPU = Debug|Any CPU
+                             		Release|Any CPU = Release|Any CPU
+                             		Publish|Any CPU = Publish|Any CPU
+                             	EndGlobalSection
+                             	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Release|Any CPU.Build.0 = Release|Any CPU
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Publish|Any CPU.ActiveCfg = Release|Any CPU
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399}.Publish|Any CPU.Build.0 = Release|Any CPU
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}.Release|Any CPU.Build.0 = Release|Any CPU
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}.Publish|Any CPU.ActiveCfg = Publish|Any CPU
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B}.Publish|Any CPU.Build.0 = Publish|Any CPU
+                             	EndGlobalSection
+                             	GlobalSection(SolutionProperties) = preSolution
+                             		HideSolutionNode = FALSE
+                             	EndGlobalSection
+                             	GlobalSection(NestedProjects) = preSolution
+                             		{3A3E0043-9A70-D936-82A5-445F0CA81399} = {EC16570D-B7EA-1C82-7ECB-77418AAD0BB4}
+                             		{83CC0C9F-E739-A13E-5604-F84B5D1BA90B} = {EC16570D-B7EA-1C82-7ECB-77418AAD0BB4}
+                             	EndGlobalSection
+                             EndGlobal
+                             """;
+
+        var slnxBasePath = @"C:\repos\src\Client\Base.slnx".ToCurrentPlatformPathForm();
+        var slnxOverlayPath = @"C:\repos\src\Overlay.slnx".ToCurrentPlatformPathForm();
+        var slnxBase = CreateSolutionModelFromSlnx(slnxBaseXml);
+        var slnOverlay = CreateSolutionModelFromSln(slnOverlaySln);
+        var slnMergeSettings = new SlnMergeSettings()
+        {
+            SolutionFolders = [],
+            NestedProjects = [],
+            ProjectConflictResolution = ProjectConflictResolution.PreserveOverlay,
+        };
+
+        // Act
+        SolutionMerger.MergeTo(slnxBase, slnxBasePath, slnOverlay, slnxOverlayPath, slnMergeSettings, _logger);
+
+        // Assert
+        var mergedSln = SerializeSolutionToSln(slnxBase);
+        var mergedSlnx = SerializeSolutionToSlnx(slnxBase);
+        Assert.Equal("""
+                     <Solution>
+                       <Configurations>
+                         <BuildType Name="Debug" />
+                         <BuildType Name="Publish" />
+                         <BuildType Name="Release" />
+                       </Configurations>
+                       <Folder Name="/New Folder1/">
+                         <Project Path="../src/MyApp.Server/MyApp.Server.csproj">
+                           <BuildType Solution="Publish|*" Project="Release" />
+                         </Project>
+                         <Project Path="../src/MyApp.Shared/MyApp.Shared.csproj" />
+                       </Folder>
                        <Project Path="MyApp.Client.csproj" />
                      </Solution>
                      """, mergedSlnx);
