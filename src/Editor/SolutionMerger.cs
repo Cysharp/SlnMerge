@@ -190,10 +190,18 @@ namespace SlnMerge
             }
 
             // Add or move projects into solution folders
+            var movedProjects = new HashSet<SolutionProjectModel>();
             foreach (var nested in settings.NestedProjects)
             {
                 var nestedProjectNamePattern = new Regex($"^{Regex.Escape(nested.ProjectName).Replace(@"\*", ".*").Replace(@"\?", ".")}$");
-                var matchedProjects = baseSln.SolutionProjects.Where(x => nestedProjectNamePattern.IsMatch(x.ActualDisplayName));
+                var matchedProjects = baseSln.SolutionProjects
+                    .Where(x => nestedProjectNamePattern.IsMatch(x.ActualDisplayName) && !movedProjects.Contains(x))
+                    .ToArray();
+                if (matchedProjects.Length == 0)
+                {
+                    continue;
+                }
+
                 var normalizedFolderPath = NormalizeSolutionFolderPath(nested.FolderPath);
                 var destFolder = baseSln.FindFolder(normalizedFolderPath);
                 if (destFolder is null)
@@ -205,6 +213,7 @@ namespace SlnMerge
                 foreach (var matchedProject in matchedProjects)
                 {
                     matchedProject.MoveToFolder(destFolder);
+                    movedProjects.Add(matchedProject);
                 }
             }
 
