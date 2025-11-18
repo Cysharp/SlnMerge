@@ -32,18 +32,37 @@ Unity とは別にサーバーサイドの C# プロジェクトおよびソリ�
 
 レガシーソリューションフォーマット (.sln) とモダンなソリューションフォーマット (.slnx) の両方に対応しています。
 
-## 使い方
-### 1. SlnMerge をインストールする
+## インストール
 Package Manager を使用して git リポジトリからパッケージをインストールできます。
 
-![](docs/images/SlnMerge-Image-02.png)
+![Package Manager: Add packages from git URL...](docs/images/SlnMerge-Image-02.png)
 
 ```
-https://github.com/Cysharp/SlnMerge.git?path=src
+https://github.com/Cysharp/SlnMerge.git?path=src#{Version}
 ```
 
-### 2. `プロジェクト名.sln.mergesettings` ファイルでマージしたいソリューションを指定する
-Unity によって生成されるソリューションファイル名に .mergesettings をつけた名前の設定ファイルを用意します。
+> [!NOTE]
+> `{Version}` は `2.0.0` のようにリリースバージョンを指定してください。省略された場合はメインブランチが使用され、安定しない可能性があります。
+
+## SlnMerge の設定 (Unity Editor から)
+Unity Editor の Preferences から SlnMerge を選択することで設定画面を開けます。この Preferences の設定項目はプロジェクトごとのユーザーの設定項目として保存されます。
+
+![Unity Editor: Preferences -> SlnMerge](docs/images/SlnMerge-Prefs-01.png)
+
+- **SlnMerge settings file**: ソリューションのマージ設定ファイル (.mergesettings) を選択できます。デフォルトでは自動でソリューション名に基づいたファイルが選択されます
+- **Processing Policy Override**: ソリューションの処理ポリシーを上書きします。デフォルトでは .mergesettings ファイルの設定が使用されます
+- **Verbose Logging**: 詳細なログを出力します
+- **Edit current merge settings**: 現在選択されているマージ設定ファイルをエディタで開きます。存在しない場合には編集時に作成されます
+- **Regenerate Solution file**: ソリューションファイルを再生成します
+
+詳細なソリューションのマージ設定は `Edit current merge settings` ボタンを押して開く設定画面で行います。
+
+![](docs/images/SlnMerge-EditSettings-01.png)
+
+ソリューションのマージ設定 (.mergesettings) はプロジェクトで共有されます。設定項目について詳しくは[ソリューションのマージ設定項目](#ソリューションのマージ設定項目)を参照してください。
+
+## SlnMerge の設定 (.mergesettings を編集する)
+Unity Editor からの設定以外にも .mergesettings ファイルを作成し編集することでも設定可能です。Unity によって生成されるソリューションファイル名に .mergesettings をつけた名前の設定ファイルを用意します。
 
 例えば MyUnityApp プロジェクトの場合は MyUnityApp.sln が生成されるので MyUnityApp.sln.mergesettings ファイルを作成します。
 
@@ -57,22 +76,24 @@ Unity によって生成されるソリューションファイル名に .merges
 ```
 
 > [!NOTE]
-> `MergeTargetSolution` 要素が存在しない場合ファイルには `プロジェクト名.Merge.sln` が読み込まれます。
-> `MergeTargetSolution` 要素が存在し、要素の内容が空の場合には暗黙的に空のソリューションとマージされます。これはフォルダー分けの機能のみを使用したい場合に役立ちます。
+> `MergeTargetSolution` 要素が存在しないか要素の内容が空の場合には暗黙的に空のソリューションとマージされます。これはフォルダー分けの機能のみを使用したい場合に役立ちます。
 
-## 設定
+## ソリューションのマージ設定項目
 mergesettings ファイルには次の設定項目があります。
 
-- `Disabled`: SlnMerge を無効にするかどうか (デフォルト: `false`)
 - `MergeTargetSolution`: マージしたいソリューションのパス
 - `NestedProjects`: ネストするプロジェクトを指定します。通常ソリューションフォルダーとして利用します
     - `NestedProject/FolderPath`: ソリューション上のフォルダーパス (存在しない場合は生成)
     - `NestedProject/ProjectName`: プロジェクト名
-        - ワイルドカードが使用可能です (`?`, `*`)
+        - ワイルドカードを使用可能です (`?`, `*`)
 - `ProjectConflictResolution`: マージ元とマージ先でソリューション内に同名のプロジェクトがある場合の処理方法 (`PreserveAll`, `PreserveUnity`, `PreserveOverlay`) (デフォルト: `PreserveUnity`)
     - `PreserveAll`: すべてのプロジェクトを残します (Unity とマージ対象のソリューションのプロジェクトの両方)
     - `PreserveUnity`: Unity が生成したソリューションのプロジェクトを残します (マージ対象のソリューションのプロジェクトを破棄)
     - `PreserveOverlay`: 上書きするソリューションのプロジェクトを残します (Unity が生成したソリューションのプロジェクトを破棄)
+- `DefaultProcessingPolicy`: ソリューションの処理ポリシー (デフォルト: `Merge`)
+    - `Merge`: マージ処理を行います (デフォルト)
+    - `NestedProjectOnly`: プロジェクトのソリューションフォルダーへのネスト処理のみを行います
+    - `Disabled`: マージ処理をスキップします
 
 ### ソリューションフォルダーに追加する
 `NestedProjects` 設定を使用するとマージ後にプロジェクトをソリューションフォルダーへ移動できます。ベースのソリューションにソリューションフォルダーが存在しない場合には自動で追加します。
