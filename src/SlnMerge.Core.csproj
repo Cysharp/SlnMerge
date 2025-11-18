@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="**/Unity/*.*" />
     <None Remove="**/*.meta" />
     <None Remove="Editor\SlnMerge.Microsoft.VisualStudio.SolutionPersistence.dll" />
   </ItemGroup>
