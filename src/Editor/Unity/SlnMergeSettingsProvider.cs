@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.CodeEditor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -84,7 +85,10 @@ namespace SlnMerge.Unity
             }
 
             GUILayout.Space(8);
-            EditorGUILayout.HelpBox("To regenerate the solution, remove `.sln`/`.slnx` file, open 'External Tools' and click the 'Regenerate project files' button.", MessageType.Info);
+            if (GUILayout.Button("Regenerate Solution file"))
+            {
+                RegenerateSolutionHelper.Regenerate();
+            }
         }
 
         private void UpdateMergeSettingsFilesSelectionItems()
@@ -107,6 +111,26 @@ namespace SlnMerge.Unity
                 .Where(x => x == "  " || !string.IsNullOrWhiteSpace(x))
                 .Distinct()
                 .ToArray();
+        }
+    }
+
+    internal static class RegenerateSolutionHelper
+    {
+        public static void Regenerate()
+        {
+            var projectPath = Path.GetDirectoryName(Application.dataPath)!;
+            var projectName = Path.GetFileName(projectPath)!;
+
+            SlnMergeConsoleLogger.Instance.Debug($"Regenerate solution file: {projectPath}");
+            var solutions = Directory.EnumerateFiles(projectPath, $"{projectName}.sln*", SearchOption.TopDirectoryOnly);
+            foreach (var sln in solutions.Where(x => x.EndsWith(".sln") || x.EndsWith(".slnx")))
+            {
+                SlnMergeConsoleLogger.Instance.Debug($"Deleting solution file: {sln}");
+                File.Delete(sln);
+            }
+
+            // HACK: Make it look like a dummy file has been added.
+            CodeEditor.CurrentEditor.SyncIfNeeded(new[] { "RegenerateSolution.cs" }, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
         }
     }
 }
