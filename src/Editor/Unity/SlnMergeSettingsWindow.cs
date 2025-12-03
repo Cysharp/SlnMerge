@@ -32,7 +32,9 @@ namespace SlnMerge.Unity
             if (string.IsNullOrWhiteSpace(path))
             {
                 // Custom settings file path is not specified. Use the solution name based settings file.
-                if (SlnMergeSettings.TryLoadBySolutionPath($"{Application.productName}.slnx", out var loadedSlnMergeSettingsPath, out _))
+                var projectPath = Path.GetDirectoryName(Application.dataPath)!;
+                var projectName = Path.GetFileName(projectPath)!;
+                if (SlnMergeSettings.TryLoadBySolutionPath($"{projectName}.slnx", out var loadedSlnMergeSettingsPath, out _))
                 {
                     // Found existing settings file.
                     path = loadedSlnMergeSettingsPath;
